@@ -48,7 +48,7 @@ Use GitHub issues as the execution surface:
 Use the mono repo pattern where it helps:
 
 - `feature/epic-{id}-{slug}` for multi-story work
-- `claude/story-{id}-{slug}` for story implementation
+- `agent/story-{id}-{slug}` for story implementation
 - `docs/{slug}` for documentation-only work
 - `fix/{slug}` for bug fixes
 

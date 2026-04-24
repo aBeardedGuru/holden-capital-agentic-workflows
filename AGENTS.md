@@ -17,10 +17,10 @@ It is not the production application monorepo. It is the place where agents:
 
 | Agent | Role | Permission | Primary Use |
 | --- | --- | --- | --- |
-| ho-pe | Repo steward | ADMIN | Defines structure, approves standards, creates epics/stories/issues |
-| claude-opus | Workflow maintainer | MAINTAINER | Implements docs, schemas, prompts, scripts, workflows, PRs |
-| claude-sonnet | Feature developer | DEVELOPER | Implements assigned story-scoped changes |
-| claude-haiku | Reviewer | REVIEWER | Reviews docs, schemas, scripts, workflows, tests |
+| Primary OpenAI agent | Repo steward | ADMIN | Defines structure, approves standards, creates epics/stories/issues |
+| OpenAI maintainer agent | Workflow maintainer | MAINTAINER | Implements docs, schemas, prompts, scripts, workflows, PRs |
+| OpenAI developer agent | Feature developer | DEVELOPER | Implements assigned story-scoped changes |
+| OpenAI reviewer agent | Reviewer | REVIEWER | Reviews docs, schemas, scripts, workflows, tests |
 
 ## Permission Model
 
@@ -97,7 +97,7 @@ This repo follows the same useful pattern observed in `holden-capital-mono`:
 Recommended branch names:
 
 - `feature/epic-{id}-{slug}`
-- `claude/story-{id}-{slug}`
+- `agent/story-{id}-{slug}`
 - `fix/{slug}`
 - `docs/{slug}`
 
