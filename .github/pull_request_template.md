@@ -11,6 +11,7 @@
 - [ ] Issue body was specific enough to implement from directly
 - [ ] Change follows `governance/enterprise-development-standards.md`
 - [ ] Branch scope stayed focused to one implementation concern
+- [ ] Change is small enough for trunk-based merge to `main`
 
 ## Nodes Changed
 

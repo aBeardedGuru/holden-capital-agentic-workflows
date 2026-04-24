@@ -13,6 +13,7 @@ These standards exist to keep Holden Capital delivery:
 - reviewable
 - auditable
 - safe for production-facing automation
+- trunk-based by default
 
 ## Operating Model
 

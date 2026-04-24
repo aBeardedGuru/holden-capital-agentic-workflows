@@ -59,12 +59,12 @@ Use GitHub issues as the execution surface:
 
 ### Branching
 
-Use the Holden Capital enterprise branch pattern:
+Use the Holden Capital trunk-based branch pattern:
 
-- `feature/epic-{id}-{slug}` for multi-story work
 - `agent/story-{id}-{slug}` for story implementation
 - `docs/{slug}` for documentation-only work
 - `fix/{slug}` for bug fixes
+- `chore/{slug}` for maintenance work
 
 The branch naming is model-agnostic. OpenAI is the runtime. BMAD or `ho-pe` is the working role.
 
@@ -84,9 +84,9 @@ Do not open vague PRs that mix unrelated planning, workflow, and script changes.
 
 Default promotion flow:
 
-`story -> epic -> main`
+`branch -> main`
 
-For small standalone maintenance work, `fix/*` or `docs/*` branches may target `main` directly through PR.
+Most work should merge straight to `main` through small PRs. Epics should usually organize issues and sequencing, not act as long-lived branch layers.
 
 ## Quality Gates
 

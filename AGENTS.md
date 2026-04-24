@@ -102,19 +102,20 @@ This repo follows the Holden Capital enterprise GitHub model adapted from `holde
 
 - Epics live as GitHub issues
 - Stories should become GitHub issues under those epics
-- Story branches are the normal implementation unit
-- PRs should describe story scope, contracts changed, and validation performed
+- Story or small task branches are the normal implementation unit
+- PRs normally land directly on `main`
+- PRs should describe scope, contracts changed, and validation performed
 
 The detailed GitHub execution rules live in [governance/github-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/governance/github-standards.md).
 
 Recommended branch names:
 
-- `feature/epic-{id}-{slug}`
 - `agent/story-{id}-{slug}`
 - `fix/{slug}`
 - `docs/{slug}`
+- `chore/{slug}`
 
-If a BMAD agent is acting on a story, the branch can still use `agent/story-{id}-{slug}`. The runtime model is OpenAI; the working role is BMAD.
+If a BMAD agent is acting on a story, the branch should usually use `agent/story-{id}-{slug}`. The runtime model is OpenAI; the working role is BMAD.
 
 ## Before Starting Work
 

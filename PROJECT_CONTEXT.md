@@ -38,6 +38,7 @@ Google Drive -> n8n -> local job packet -> Codex CLI -> JSON output -> Google Sh
 - local AI execution where possible
 - no secrets in repo
 - issue-first execution and PR-reviewed promotion
+- trunk-based delivery with small merges to `main`
 
 ## Canonical Planning Surfaces
 

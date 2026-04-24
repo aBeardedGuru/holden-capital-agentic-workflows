@@ -55,28 +55,41 @@ Story issues must be detailed enough that an implementation agent can start from
 
 Use this branch model by default:
 
-- `feature/epic-{id}-{slug}`
 - `agent/story-{id}-{slug}`
 - `fix/{slug}`
 - `docs/{slug}`
+- `chore/{slug}`
+- `spike/{slug}` for short-lived exploration that will not ship unreviewed
 
 Rules:
 
 - keep one implementation concern per branch
 - do not commit directly to `main`
-- do not commit directly to epic branches except for controlled repo-steward tasks
-- use PRs to promote changes upward
+- keep branches short-lived
+- prefer story-sized or smaller PRs
+- use PRs to merge into `main`
+- do not use long-lived epic branches as the default operating model
 
 ## Promotion Standard
 
 Default promotion flow:
 
-`story -> epic -> main`
+`branch -> main`
 
-For small standalone maintenance work:
+Most work should land as:
 
+- `agent/story-* -> main`
 - `fix/* -> main`
 - `docs/* -> main`
+- `chore/* -> main`
+
+Epics remain planning and coordination containers in GitHub, not mandatory branch layers.
+
+For larger efforts:
+
+- break the epic into small mergeable stories
+- merge each validated story to `main`
+- use feature flags, draft states, or disabled workflows when partial work must stay non-operational
 
 These still require PR review.
 

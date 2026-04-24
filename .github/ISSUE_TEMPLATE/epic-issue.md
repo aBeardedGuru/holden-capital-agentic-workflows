@@ -33,6 +33,11 @@ labels: ["epic"]
 - Phase 2: [Core flow]
 - Phase 3: [Validation / polish]
 
+## Trunk Merge Plan
+
+- [ ] Work can be split into small PR-sized stories
+- [ ] Partial delivery can remain safe behind review gates, draft state, or disabled workflow activation
+
 ## Acceptance Criteria
 
 - [ ] Given [context], when [action], then [expected outcome]
