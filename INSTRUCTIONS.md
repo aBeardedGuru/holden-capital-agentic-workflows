@@ -10,10 +10,11 @@ Read these in order:
 
 1. `AGENTS.md`
 2. `governance/enterprise-development-standards.md`
-3. `PROJECT_CONTEXT.md`
-4. Node-local `AGENTS.md` and `INSTRUCTIONS.md` for `governance/`, `docs/`, `planning/`, or `automation/`
-5. Relevant docs in `docs/`
-6. Relevant planning artifacts in `planning/`
+3. `governance/github-standards.md` for issue, branch, or PR work
+4. `PROJECT_CONTEXT.md`
+5. Node-local `AGENTS.md` and `INSTRUCTIONS.md` for `governance/`, `docs/`, `planning/`, or `automation/`
+6. Relevant docs in `docs/`
+7. Relevant planning artifacts in `planning/`
 
 ### Step 2: Identify Work Type
 

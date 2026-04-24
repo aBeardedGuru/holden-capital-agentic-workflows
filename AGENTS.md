@@ -105,6 +105,8 @@ This repo follows the Holden Capital enterprise GitHub model adapted from `holde
 - Story branches are the normal implementation unit
 - PRs should describe story scope, contracts changed, and validation performed
 
+The detailed GitHub execution rules live in [governance/github-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/governance/github-standards.md).
+
 Recommended branch names:
 
 - `feature/epic-{id}-{slug}`

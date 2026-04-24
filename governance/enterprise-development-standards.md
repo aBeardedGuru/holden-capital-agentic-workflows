@@ -73,70 +73,9 @@ If implementation behavior conflicts with the issue or docs, the agent must reso
 - Must validate behavior, coverage, and standards compliance
 - Must not treat review as implementation unless explicitly reassigned
 
-## GitHub Work Management Standard
+## GitHub Execution Standard
 
-GitHub issues are the primary work surface.
-
-### Epic Standard
-
-Every epic should contain:
-
-- goal
-- business value
-- scope
-- story list
-- acceptance criteria
-- constraints
-- dependencies
-- validation approach
-- risk notes when material
-
-### Story Standard
-
-Every story should contain:
-
-- user story
-- parent epic
-- scoped change list
-- affected nodes or files
-- acceptance criteria
-- validation checklist
-- implementation notes or constraints
-
-Story issues must be detailed enough that an implementation agent does not depend on stale repo planning files to begin work.
-
-## Branching And Promotion Standard
-
-Use this branch model by default:
-
-- `feature/epic-{id}-{slug}`
-- `agent/story-{id}-{slug}`
-- `fix/{slug}`
-- `docs/{slug}`
-
-Promotion flow:
-
-`story -> epic -> main`
-
-Rules:
-
-- do not commit directly to `main`
-- do not commit directly to epic branches except for controlled repo-steward tasks
-- use PRs to merge story work upward
-- keep one implementation concern per branch
-
-## Pull Request Standard
-
-Every PR must state:
-
-- what changed
-- why it changed
-- which issue it serves
-- which contracts changed
-- how it was validated
-- what remains risky or unresolved
-
-PRs must not mix unrelated planning, workflow, and governance changes.
+Follow `governance/github-standards.md` for issue structure, branch naming, promotion flow, and PR expectations.
 
 ## Contract-First Delivery Standard
 
@@ -202,5 +141,5 @@ In `holden-capital-agentic-workflows`, these enterprise standards are applied th
 - [AGENTS.md](/home/dank/Projects/holden-capital-agentic-workflows/AGENTS.md)
 - [INSTRUCTIONS.md](/home/dank/Projects/holden-capital-agentic-workflows/INSTRUCTIONS.md)
 - [PROJECT_CONTEXT.md](/home/dank/Projects/holden-capital-agentic-workflows/PROJECT_CONTEXT.md)
+- [github-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/governance/github-standards.md)
 - `.github` issue and PR templates
-
