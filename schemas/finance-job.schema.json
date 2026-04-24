@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://holdencapital.io/schemas/finance-job.schema.json",
+  "title": "Finance Document Intake Job",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "job_id",
+    "created_at",
+    "source",
+    "drive_file_id",
+    "drive_file_name",
+    "drive_file_url",
+    "mime_type",
+    "extracted_text_path",
+    "output_path",
+    "schema_version"
+  ],
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["google_drive"]
+    },
+    "drive_file_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "drive_file_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "drive_file_url": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mime_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "extracted_text_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "output_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    }
+  }
+}

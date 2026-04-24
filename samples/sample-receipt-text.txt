@@ -1,0 +1,10 @@
+HOME DEPOT
+Store 1234
+2026-04-20
+
+Paint supplies       42.19
+Roller covers        13.98
+Sales tax             3.37
+Total               59.54
+
+Paid with Visa ending in 4242

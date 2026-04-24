@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://holdencapital.io/schemas/finance-extraction.schema.json",
+  "title": "Finance Document Extraction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "job_id",
+    "status",
+    "document_type",
+    "vendor_or_payee",
+    "document_date",
+    "amount",
+    "currency",
+    "payment_method",
+    "account_last4",
+    "invoice_number",
+    "due_date",
+    "category",
+    "property_or_entity",
+    "tax_relevant",
+    "confidence",
+    "summary",
+    "review_reason",
+    "extraction_notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "job_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": ["processed", "needs_review", "failed"]
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "receipt",
+        "invoice",
+        "bank_statement",
+        "credit_card_statement",
+        "tax_document",
+        "insurance",
+        "loan_document",
+        "utility",
+        "payroll",
+        "income",
+        "other",
+        "unknown"
+      ]
+    },
+    "vendor_or_payee": {
+      "type": ["string", "null"]
+    },
+    "document_date": {
+      "type": ["string", "null"],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "amount": {
+      "type": ["number", "null"]
+    },
+    "currency": {
+      "type": ["string", "null"],
+      "enum": ["USD", null]
+    },
+    "payment_method": {
+      "type": ["string", "null"]
+    },
+    "account_last4": {
+      "type": ["string", "null"],
+      "pattern": "^\\d{4}$"
+    },
+    "invoice_number": {
+      "type": ["string", "null"]
+    },
+    "due_date": {
+      "type": ["string", "null"],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "category": {
+      "type": ["string", "null"]
+    },
+    "property_or_entity": {
+      "type": ["string", "null"]
+    },
+    "tax_relevant": {
+      "type": ["boolean", "null"]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "summary": {
+      "type": "string"
+    },
+    "review_reason": {
+      "type": ["string", "null"]
+    },
+    "extraction_notes": {
+      "type": ["string", "null"]
+    }
+  }
+}

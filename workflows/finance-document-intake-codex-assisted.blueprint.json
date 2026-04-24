@@ -1,0 +1,87 @@
+{
+  "name": "Finance Document Intake - Codex Assisted",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "meta": {
+    "description": "Blueprint for a Drive -> local Codex CLI -> Sheets finance document intake workflow. Replace placeholder folder and spreadsheet IDs before activation.",
+    "requires": [
+      "Google Drive account",
+      "Google Sheets account",
+      "scripts/codex-finance-worker.sh"
+    ]
+  },
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "inboxFolderId",
+              "type": "string",
+              "value": "REPLACE_WITH_DRIVE_INBOX_FOLDER_ID"
+            },
+            {
+              "name": "ledgerSpreadsheetId",
+              "type": "string",
+              "value": "REPLACE_WITH_GOOGLE_SHEET_ID"
+            },
+            {
+              "name": "workerCommand",
+              "type": "string",
+              "value": "/home/dank/Projects/holden-capital-agentic-workflows/scripts/codex-finance-worker.sh --once"
+            },
+            {
+              "name": "runtimeInboxDir",
+              "type": "string",
+              "value": "/home/dank/Projects/holden-capital-agentic-workflows/runtime/finance-document-intake/inbox"
+            },
+            {
+              "name": "runtimeOutputDir",
+              "type": "string",
+              "value": "/home/dank/Projects/holden-capital-agentic-workflows/runtime/finance-document-intake/outputs"
+            }
+          ]
+        }
+      },
+      "id": "config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "content": "Implementation notes:\n1. List files in Config.inboxFolderId with Google Drive.\n2. For each file, download/extract text and write a job JSON matching schemas/finance-job.schema.json into runtimeInboxDir.\n3. Run workerCommand through SSH or Execute Command.\n4. Read the JSON result from runtimeOutputDir.\n5. Append Transactions/Documents/Review Queue rows in Google Sheets.\n6. Move the Drive file to processed, review, or error folders.\n\nThis blueprint is intentionally inactive until folder IDs and Sheet IDs are configured."
+      },
+      "id": "implementation-notes",
+      "name": "Implementation Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [460, -180]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
