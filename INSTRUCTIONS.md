@@ -11,10 +11,11 @@ Read these in order:
 1. `AGENTS.md`
 2. `governance/enterprise-development-standards.md`
 3. `governance/github-standards.md` for issue, branch, or PR work
-4. `PROJECT_CONTEXT.md`
-5. Node-local `AGENTS.md` and `INSTRUCTIONS.md` for `governance/`, `docs/`, `planning/`, or `automation/`
-6. Relevant docs in `docs/`
-7. Relevant planning artifacts in `planning/`
+4. `governance/git-ops-standards.md` for local branch and worktree setup
+5. `PROJECT_CONTEXT.md`
+6. Node-local `AGENTS.md` and `INSTRUCTIONS.md` for `governance/`, `docs/`, `planning/`, or `automation/`
+7. Relevant docs in `docs/`
+8. Relevant planning artifacts in `planning/`
 
 ### Step 2: Identify Work Type
 
@@ -67,6 +68,12 @@ Use the Holden Capital trunk-based branch pattern:
 - `chore/{slug}` for maintenance work
 
 The branch naming is model-agnostic. OpenAI is the runtime. BMAD or `ho-pe` is the working role.
+
+### Local Git Ops
+
+When parallel agent work is happening on the same machine, prefer one git worktree per active branch.
+
+Do not have multiple active agents share one dirty checkout.
 
 ### Pull Requests
 

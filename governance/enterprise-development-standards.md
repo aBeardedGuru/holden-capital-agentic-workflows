@@ -23,6 +23,7 @@ Holden Capital development uses:
 - BMAD agents as specialist roles
 - OpenAI models as the runtime layer
 - GitHub issues and pull requests as the execution surface
+- git worktrees as the recommended local parallel-development model
 
 The role taxonomy is BMAD plus `ho-pe`, not model-family specific.
 
@@ -77,6 +78,10 @@ If implementation behavior conflicts with the issue or docs, the agent must reso
 ## GitHub Execution Standard
 
 Follow `governance/github-standards.md` for issue structure, branch naming, promotion flow, and PR expectations.
+
+## Git Operations Standard
+
+Follow `governance/git-ops-standards.md` for local branch handling, worktree usage, and parallel agent coordination on shared machines.
 
 ## Contract-First Delivery Standard
 
@@ -143,4 +148,5 @@ In `holden-capital-agentic-workflows`, these enterprise standards are applied th
 - [INSTRUCTIONS.md](/home/dank/Projects/holden-capital-agentic-workflows/INSTRUCTIONS.md)
 - [PROJECT_CONTEXT.md](/home/dank/Projects/holden-capital-agentic-workflows/PROJECT_CONTEXT.md)
 - [github-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/governance/github-standards.md)
+- [git-ops-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/governance/git-ops-standards.md)
 - `.github` issue and PR templates

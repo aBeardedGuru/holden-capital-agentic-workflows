@@ -23,6 +23,7 @@ It exists to make agent work reliable across:
 - JSON for n8n blueprints and sample payloads
 - Bash for local worker automation
 - GitHub Issues and PRs for execution workflow
+- Git worktrees for parallel local branch isolation
 - OpenAI models for agent runtime
 - BMAD agents plus `ho-pe` for operating roles
 

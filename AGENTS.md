@@ -96,6 +96,9 @@ Agents must not commit runtime state, credentials, or generated operational data
 ### Rule 6: Enterprise Standards Apply By Default
 If repo-local guidance is silent, agents should follow the Holden Capital enterprise standards from `governance/enterprise-development-standards.md`.
 
+### Rule 7: Prefer Worktrees For Parallel Agent Work
+If multiple agents are active on the same machine in this repo, prefer separate git worktrees instead of sharing one checkout.
+
 ## Git and GitHub Working Model
 
 This repo follows the Holden Capital enterprise GitHub model adapted from `holden-capital-mono`:
@@ -107,6 +110,7 @@ This repo follows the Holden Capital enterprise GitHub model adapted from `holde
 - PRs should describe scope, contracts changed, and validation performed
 
 The detailed GitHub execution rules live in [governance/github-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/governance/github-standards.md).
+The detailed git operating rules live in [governance/git-ops-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/governance/git-ops-standards.md).
 
 Recommended branch names:
 
