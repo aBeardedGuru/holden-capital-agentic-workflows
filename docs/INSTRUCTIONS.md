@@ -6,6 +6,7 @@
 - define inputs and outputs
 - list required fields and behaviors
 - spell out edge cases and review gates
+- make issues and PRs self-sufficient when repo docs may drift
 
 ## Preferred Doc Types
 
@@ -20,3 +21,4 @@
 - `automation/`
 - `planning/`
 - GitHub epic/story issues
+- `docs/enterprise-development-standards.md`

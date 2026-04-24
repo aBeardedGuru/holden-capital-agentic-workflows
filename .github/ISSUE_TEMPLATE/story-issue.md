@@ -20,6 +20,11 @@ So that [value].
 - [specific change 1]
 - [specific change 2]
 
+## Constraints
+
+- [approval gate, dependency, or safety rule]
+- [repo or workflow constraint]
+
 ## Files Or Nodes Likely Affected
 
 - `docs/...`
@@ -44,6 +49,7 @@ So that [value].
 - [ ] contracts updated if schema/prompt/workflow changed
 - [ ] no secrets committed
 - [ ] relevant sample or test updated
+- [ ] validation steps are explicit and repeatable
 
 ## Notes
 

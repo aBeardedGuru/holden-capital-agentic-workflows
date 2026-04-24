@@ -9,10 +9,11 @@ This file tells agents how to work in this repo efficiently and consistently.
 Read these in order:
 
 1. `AGENTS.md`
-2. `PROJECT_CONTEXT.md`
-3. Node-local `AGENTS.md` and `INSTRUCTIONS.md` for `docs/`, `planning/`, or `automation/`
-4. Relevant docs in `docs/`
-5. Relevant planning artifacts in `planning/`
+2. `docs/enterprise-development-standards.md`
+3. `PROJECT_CONTEXT.md`
+4. Node-local `AGENTS.md` and `INSTRUCTIONS.md` for `docs/`, `planning/`, or `automation/`
+5. Relevant docs in `docs/`
+6. Relevant planning artifacts in `planning/`
 
 ### Step 2: Identify Work Type
 
@@ -57,7 +58,7 @@ Use GitHub issues as the execution surface:
 
 ### Branching
 
-Use the mono repo pattern where it helps:
+Use the Holden Capital enterprise branch pattern:
 
 - `feature/epic-{id}-{slug}` for multi-story work
 - `agent/story-{id}-{slug}` for story implementation
@@ -78,16 +79,26 @@ PRs should include:
 
 Do not open vague PRs that mix unrelated planning, workflow, and script changes.
 
+### Promotion Model
+
+Default promotion flow:
+
+`story -> epic -> main`
+
+For small standalone maintenance work, `fix/*` or `docs/*` branches may target `main` directly through PR.
+
 ## Quality Gates
 
 Before marking work complete:
 
+- issue acceptance criteria are actually covered
 - docs still match actual repo behavior
 - schema examples still validate conceptually
 - prompts still reflect schema/output expectations
 - scripts still point at the right paths and contracts
 - workflow blueprints do not embed secrets
 - runtime files are not committed
+- risks and unresolved items are called out explicitly
 
 ## Finance Automation Principles
 
@@ -110,3 +121,4 @@ Before marking work complete:
 - update planning if the problem is scope or sequencing
 - update the automation contract first if the problem is technical
 - prefer story-sized changes over repo-wide rewrites
+- escalate before changing governance, approval gates, or financial safety rules

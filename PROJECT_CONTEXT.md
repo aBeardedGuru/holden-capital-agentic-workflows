@@ -4,6 +4,8 @@
 
 This repo is the AI-optimized workspace for Holden Capital finance automation planning and implementation support.
 
+It is governed by the Holden Capital enterprise delivery standard in [docs/enterprise-development-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/docs/enterprise-development-standards.md).
+
 It exists to make agent work reliable across:
 
 - finance document intake
@@ -35,6 +37,7 @@ Google Drive -> n8n -> local job packet -> Codex CLI -> JSON output -> Google Sh
 - review-first financial automation
 - local AI execution where possible
 - no secrets in repo
+- issue-first execution and PR-reviewed promotion
 
 ## Canonical Planning Surfaces
 

@@ -6,6 +6,12 @@
 
 - Closes #[issue-number]
 
+## Enterprise Standards Check
+
+- [ ] Issue body was specific enough to implement from directly
+- [ ] Change follows `docs/enterprise-development-standards.md`
+- [ ] Branch scope stayed focused to one implementation concern
+
 ## Nodes Changed
 
 - [ ] `.github`
@@ -28,11 +34,17 @@
 
 ## Validation
 
+- [ ] Acceptance criteria covered
 - [ ] Docs still match actual behavior
 - [ ] Relevant samples updated
 - [ ] No secrets added
 - [ ] Runtime data not committed
-- [ ] Acceptance criteria covered
+- [ ] Validation steps are described in PR body
+
+## Risk Review
+
+- [ ] No material unresolved risks
+- [ ] Remaining risk or follow-up is documented below
 
 ## Notes
 

@@ -9,7 +9,7 @@ labels: ["epic"]
 
 [What this epic enables for the operator, bookkeeper, or workflow system]
 
-## User Value
+## Strategic Context
 
 - [Primary outcome]
 - [Secondary outcome]
@@ -27,6 +27,12 @@ labels: ["epic"]
 - [ ] Story N.2: [Title]
 - [ ] Story N.3: [Title]
 
+## Implementation Order
+
+- Phase 1: [Foundation]
+- Phase 2: [Core flow]
+- Phase 3: [Validation / polish]
+
 ## Acceptance Criteria
 
 - [ ] Given [context], when [action], then [expected outcome]
@@ -43,6 +49,11 @@ labels: ["epic"]
 ## Dependencies
 
 - [Existing doc, schema, script, workflow, or issue]
+
+## Risks
+
+- [Primary delivery or safety risk]
+- [Dependency or integration risk]
 
 ## Validation
 

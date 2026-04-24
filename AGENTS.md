@@ -12,6 +12,8 @@ It is not the production application monorepo. It is the place where agents:
 - document epics, stories, and operating rules
 - build and validate n8n workflow support artifacts
 
+This repo adopts the Holden Capital enterprise governance baseline defined in [docs/enterprise-development-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/docs/enterprise-development-standards.md).
+
 ## Operating Model
 
 This repo uses:
@@ -90,9 +92,12 @@ Only ADMIN should make broad structural changes to:
 ### Rule 5: Runtime Data Stays Local
 Agents must not commit runtime state, credentials, or generated operational data. `runtime/` is local-only.
 
+### Rule 6: Enterprise Standards Apply By Default
+If repo-local guidance is silent, agents should follow the Holden Capital enterprise standards from `docs/enterprise-development-standards.md`.
+
 ## Git and GitHub Working Model
 
-This repo follows the same useful pattern observed in `holden-capital-mono`:
+This repo follows the Holden Capital enterprise GitHub model adapted from `holden-capital-mono`:
 
 - Epics live as GitHub issues
 - Stories should become GitHub issues under those epics
