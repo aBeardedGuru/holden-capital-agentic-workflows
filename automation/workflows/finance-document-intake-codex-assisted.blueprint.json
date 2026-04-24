@@ -10,7 +10,7 @@
     "requires": [
       "Google Drive account",
       "Google Sheets account",
-      "scripts/codex-finance-worker.sh"
+      "automation/scripts/codex-finance-worker.sh"
     ]
   },
   "nodes": [
@@ -37,19 +37,24 @@
               "value": "REPLACE_WITH_GOOGLE_SHEET_ID"
             },
             {
+              "name": "repoRoot",
+              "type": "string",
+              "value": "REPLACE_WITH_REPO_ROOT"
+            },
+            {
               "name": "workerCommand",
               "type": "string",
-              "value": "/home/dank/Projects/holden-capital-agentic-workflows/scripts/codex-finance-worker.sh --once"
+              "value": "REPLACE_WITH_REPO_ROOT/automation/scripts/codex-finance-worker.sh --once"
             },
             {
               "name": "runtimeInboxDir",
               "type": "string",
-              "value": "/home/dank/Projects/holden-capital-agentic-workflows/runtime/finance-document-intake/inbox"
+              "value": "REPLACE_WITH_REPO_ROOT/runtime/finance-document-intake/inbox"
             },
             {
               "name": "runtimeOutputDir",
               "type": "string",
-              "value": "/home/dank/Projects/holden-capital-agentic-workflows/runtime/finance-document-intake/outputs"
+              "value": "REPLACE_WITH_REPO_ROOT/runtime/finance-document-intake/outputs"
             }
           ]
         }
@@ -62,7 +67,7 @@
     },
     {
       "parameters": {
-        "content": "Implementation notes:\n1. List files in Config.inboxFolderId with Google Drive.\n2. For each file, download/extract text and write a job JSON matching schemas/finance-job.schema.json into runtimeInboxDir.\n3. Run workerCommand through SSH or Execute Command.\n4. Read the JSON result from runtimeOutputDir.\n5. Append Transactions/Documents/Review Queue rows in Google Sheets.\n6. Move the Drive file to processed, review, or error folders.\n\nThis blueprint is intentionally inactive until folder IDs and Sheet IDs are configured."
+        "content": "Implementation notes:\n1. List files in Config.inboxFolderId with Google Drive.\n2. For each file, download/extract text and write a job JSON matching automation/schemas/finance-job.schema.json into runtimeInboxDir.\n3. Run workerCommand through SSH or Execute Command.\n4. Read the JSON result from runtimeOutputDir.\n5. Append Transactions/Documents/Review Queue rows in Google Sheets.\n6. Move the Drive file to processed, review, or error folders.\n\nThis blueprint is intentionally inactive until repoRoot, folder IDs, and Sheet IDs are configured."
       },
       "id": "implementation-notes",
       "name": "Implementation Notes",

@@ -66,8 +66,8 @@ NFR7: Runtime files must remain under ignored `runtime/` paths and must not be c
 - Use n8n for Google Drive, Google Sheets, and workflow orchestration.
 - Use Codex CLI locally for classification/extraction.
 - Use Google Sheets as the first review ledger with `Transactions`, `Documents`, `Review Queue`, and `Run Log` tabs.
-- Use `schemas/finance-job.schema.json` for n8n-created job packets.
-- Use `schemas/finance-extraction.schema.json` for Codex-created output.
+- Use `automation/schemas/finance-job.schema.json` for n8n-created job packets.
+- Use `automation/schemas/finance-extraction.schema.json` for Codex-created output.
 - Use runtime directories under `runtime/finance-document-intake/`.
 - Maintain explicit approval gates before any external reminder or accounting post.
 - Architecture and UX design artifacts do not yet exist for this feature set; this epic breakdown derives implementation constraints from the PRD and finance intake document.

@@ -17,8 +17,6 @@
 
 ## Keep In Sync With
 
-- `schemas/`
-- `prompts/`
-- `scripts/`
-- `workflows/`
+- `automation/`
+- `planning/`
 - GitHub epic/story issues

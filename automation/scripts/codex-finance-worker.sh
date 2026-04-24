@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-RUNTIME_DIR="${ROOT_DIR}/runtime/finance-document-intake"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+AUTOMATION_DIR="${REPO_DIR}/automation"
+RUNTIME_DIR="${REPO_DIR}/runtime/finance-document-intake"
 INBOX_DIR="${RUNTIME_DIR}/inbox"
 PROCESSING_DIR="${RUNTIME_DIR}/processing"
 COMPLETE_DIR="${RUNTIME_DIR}/complete"
 FAILED_DIR="${RUNTIME_DIR}/failed"
 OUTPUT_DIR="${RUNTIME_DIR}/outputs"
-PROMPT_FILE="${ROOT_DIR}/prompts/extract-finance-document.md"
+PROMPT_FILE="${AUTOMATION_DIR}/prompts/extract-finance-document.md"
 
 usage() {
   printf 'Usage: %s [--once] [--job path/to/job.json]\n' "$0"
@@ -87,8 +88,8 @@ run_job() {
     --skip-git-repo-check \
     --ephemeral \
     --sandbox read-only \
-    -C "$ROOT_DIR" \
-    --output-schema "${ROOT_DIR}/schemas/finance-extraction.schema.json" \
+    -C "$REPO_DIR" \
+    --output-schema "${AUTOMATION_DIR}/schemas/finance-extraction.schema.json" \
     --output-last-message "$tmp_output" \
     "$(cat "$tmp_prompt")" >/dev/null; then
     printf 'Codex execution failed for job: %s\n' "$job_id" >&2

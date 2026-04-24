@@ -4,14 +4,13 @@ Defines which agents can work in this repo and how they should respect directory
 
 ## Repository Purpose
 
-This repo is the AI-first planning, documentation, schema, prompt, script, and workflow workspace for Holden Capital finance automation.
+This repo is the AI-first planning, documentation, and automation workspace for Holden Capital finance automation.
 
 It is not the production application monorepo. It is the place where agents:
 
 - define finance workflow contracts
 - document epics, stories, and operating rules
-- maintain prompts and schemas
-- build workflow blueprints and local worker tooling
+- build and validate n8n workflow support artifacts
 
 ## Operating Model
 
@@ -64,19 +63,14 @@ The role taxonomy should follow BMAD and your custom `ho-pe` agent, not Claude m
 | Path | Primary Concern | Typical Agent Mode |
 | --- | --- | --- |
 | `/docs` | Business, workflow, and planning documentation | PM, architect, tech writer |
-| `/prompts` | Prompt contracts for Codex extraction/classification | Architect, dev |
-| `/samples` | Test fixtures and sample payloads | Dev, reviewer |
-| `/schemas` | JSON contracts between n8n and local tooling | Architect, dev |
-| `/scripts` | Local worker and support scripts | Dev |
-| `/workflows` | n8n blueprint JSON and workflow contracts | Architect, dev |
+| `/planning` | PRD, epics, and future story planning | PM, architect |
+| `/automation` | Prompts, schemas, scripts, workflows, and samples | Architect, dev |
 | `/.github` | Issue/PR process and repo automation metadata | Admin, maintainer |
-| `/_bmad-output` | Planning artifacts and story decomposition | PM, architect |
-| `/tests` | Validation harness and regression checks | Dev, reviewer |
 
 ## Access Rules
 
 ### Rule 1: Contract-First Changes
-If a change affects `schemas/`, `prompts/`, `scripts/`, or `workflows/`, the agent must update the affected contract docs in `docs/` or `_bmad-output/` in the same change.
+If a change affects `automation/`, the agent must update the affected contract docs in `docs/` or `planning/` in the same change.
 
 ### Rule 2: No Silent Workflow Drift
 If a workflow blueprint changes, the agent must verify whether prompts, schemas, samples, and docs also need updates.
@@ -118,5 +112,5 @@ If a BMAD agent is acting on a story, the branch can still use `agent/story-{id}
 
 1. Read this file.
 2. Read [INSTRUCTIONS.md](/home/dank/Projects/holden-capital-agentic-workflows/INSTRUCTIONS.md).
-3. Read the node-local `AGENTS.md` and `INSTRUCTIONS.md` for the directories you will touch.
+3. Read the node-local `AGENTS.md` and `INSTRUCTIONS.md` for `docs/`, `planning/`, or `automation/` as needed.
 4. Confirm whether you are working from an epic/story issue, a planning artifact, or an ad hoc maintenance task.

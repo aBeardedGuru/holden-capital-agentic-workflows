@@ -6,7 +6,7 @@
   "drive_file_name": "sample-receipt.txt",
   "drive_file_url": "https://drive.google.com/file/d/sample-drive-file-id/view",
   "mime_type": "text/plain",
-  "extracted_text_path": "/home/dank/Projects/holden-capital-agentic-workflows/samples/sample-receipt-text.txt",
-  "output_path": "/home/dank/Projects/holden-capital-agentic-workflows/runtime/finance-document-intake/outputs/finance-doc-sample-001.json",
+  "extracted_text_path": "REPLACE_WITH_REPO_ROOT/automation/samples/sample-receipt-text.txt",
+  "output_path": "REPLACE_WITH_REPO_ROOT/runtime/finance-document-intake/outputs/finance-doc-sample-001.json",
   "schema_version": "1.0"
 }

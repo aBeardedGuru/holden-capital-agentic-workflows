@@ -10,9 +10,9 @@ Read these in order:
 
 1. `AGENTS.md`
 2. `PROJECT_CONTEXT.md`
-3. Node-local `AGENTS.md` and `INSTRUCTIONS.md` for touched directories
+3. Node-local `AGENTS.md` and `INSTRUCTIONS.md` for `docs/`, `planning/`, or `automation/`
 4. Relevant docs in `docs/`
-5. Relevant planning artifacts in `_bmad-output/planning-artifacts/`
+5. Relevant planning artifacts in `planning/`
 
 ### Step 2: Identify Work Type
 
@@ -37,7 +37,11 @@ Typical role selection:
 
 For finance automation, these layers depend on each other:
 
-`docs -> prompts -> schemas -> scripts -> workflows -> samples/tests`
+`planning -> docs -> automation`
+
+Inside `automation/`, the dependency chain is:
+
+`schemas -> prompts -> scripts -> workflows -> samples`
 
 If you change something lower in the chain, check whether higher-level docs or sibling contracts must also change.
 
@@ -96,18 +100,13 @@ Before marking work complete:
 ## Directory Guide
 
 - `docs/`: business and implementation documentation
-- `prompts/`: extraction/classification prompts for Codex
-- `samples/`: sample fixtures and example records
-- `schemas/`: machine-readable contract definitions
-- `scripts/`: local worker and helper scripts
-- `workflows/`: n8n blueprint exports and workflow definitions
+- `planning/`: PRD and epic breakdowns
+- `automation/`: prompts, schemas, scripts, workflows, and samples
 - `.github/`: issue and PR process templates
-- `_bmad-output/`: planning artifacts and breakdowns
-- `tests/`: validation and regression scaffolding
 
 ## When In Doubt
 
 - update the docs first if the problem is conceptual
-- update the schema first if the problem is contractual
-- update the script or workflow only after the contract is clear
+- update planning if the problem is scope or sequencing
+- update the automation contract first if the problem is technical
 - prefer story-sized changes over repo-wide rewrites

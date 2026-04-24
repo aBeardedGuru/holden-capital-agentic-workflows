@@ -10,13 +10,12 @@
 
 - [ ] `.github`
 - [ ] `docs`
-- [ ] `prompts`
-- [ ] `samples`
-- [ ] `schemas`
-- [ ] `scripts`
-- [ ] `workflows`
-- [ ] `_bmad-output`
-- [ ] `tests`
+- [ ] `planning`
+- [ ] `automation/prompts`
+- [ ] `automation/samples`
+- [ ] `automation/schemas`
+- [ ] `automation/scripts`
+- [ ] `automation/workflows`
 
 ## Contract Impact
 

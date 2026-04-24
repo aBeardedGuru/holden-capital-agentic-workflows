@@ -12,6 +12,7 @@ It exists to make agent work reliable across:
 - invoice collection queueing
 - weekly financial reporting
 - issue-driven planning and execution
+- simple n8n workflow development
 
 ## Primary Stack
 
@@ -38,13 +39,9 @@ Google Drive -> n8n -> local job packet -> Codex CLI -> JSON output -> Google Sh
 ## Canonical Planning Surfaces
 
 - `docs/`
-- `_bmad-output/planning-artifacts/`
+- `planning/`
 - GitHub epic and story issues
 
 ## Canonical Implementation Surfaces
 
-- `prompts/`
-- `schemas/`
-- `scripts/`
-- `workflows/`
-- `samples/`
+- `automation/`

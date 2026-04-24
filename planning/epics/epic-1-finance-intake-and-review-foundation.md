@@ -35,12 +35,12 @@ So that n8n and Codex exchange predictable finance data.
 
 **Given** n8n creates a document-processing job
 **When** the job JSON is validated
-**Then** it conforms to `schemas/finance-job.schema.json`
+**Then** it conforms to `automation/schemas/finance-job.schema.json`
 **And** it includes job ID, Drive file metadata, source file path or ID, MIME type, extracted text path when available, and processing timestamps.
 
 **Given** Codex completes classification/extraction
 **When** output JSON is validated
-**Then** it conforms to `schemas/finance-extraction.schema.json`
+**Then** it conforms to `automation/schemas/finance-extraction.schema.json`
 **And** it includes document type, vendor/payee, date, amount, currency, confidence, suggested category, suggested property/entity, status, and review reason when applicable.
 
 **Given** privacy requirements apply

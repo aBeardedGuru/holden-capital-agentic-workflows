@@ -15,7 +15,7 @@ Goal:
 Google Drive 00_Inbox
   -> n8n Google Drive node
   -> local job JSON + extracted text
-  -> scripts/codex-finance-worker.sh
+  -> automation/scripts/codex-finance-worker.sh
   -> Codex CLI
   -> JSON result
   -> n8n Google Sheets node
@@ -160,7 +160,7 @@ n8n writes one JSON job file per document:
 runtime/finance-document-intake/inbox/<job_id>.json
 ```
 
-The job must match `schemas/finance-job.schema.json`.
+The job must match `automation/schemas/finance-job.schema.json`.
 
 Codex writes:
 
@@ -168,7 +168,7 @@ Codex writes:
 runtime/finance-document-intake/outputs/<job_id>.json
 ```
 
-The output must match `schemas/finance-extraction.schema.json`.
+The output must match `automation/schemas/finance-extraction.schema.json`.
 
 ## First Manual Test
 
@@ -176,7 +176,7 @@ The output must match `schemas/finance-extraction.schema.json`.
 2. Run:
 
 ```bash
-scripts/codex-finance-worker.sh --once
+automation/scripts/codex-finance-worker.sh --once
 ```
 
 3. Confirm output exists:
@@ -191,7 +191,7 @@ ls runtime/finance-document-intake/outputs/
 python3 -m json.tool runtime/finance-document-intake/outputs/<job_id>.json >/dev/null
 ```
 
-5. Import or recreate `workflows/finance-document-intake-codex-assisted.blueprint.json` in n8n and wire the folder/sheet IDs.
+5. Import or recreate `automation/workflows/finance-document-intake-codex-assisted.blueprint.json` in n8n and wire the folder/sheet IDs.
 
 ## Safety Rules
 

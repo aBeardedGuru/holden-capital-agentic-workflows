@@ -23,9 +23,10 @@ So that [value].
 ## Files Or Nodes Likely Affected
 
 - `docs/...`
-- `schemas/...`
-- `scripts/...`
-- `workflows/...`
+- `planning/...`
+- `automation/schemas/...`
+- `automation/scripts/...`
+- `automation/workflows/...`
 
 ## Acceptance Criteria
 
