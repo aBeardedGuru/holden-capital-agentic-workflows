@@ -25,6 +25,14 @@ Work in this repo usually falls into one of these buckets:
 - issue/PR process maintenance
 - documentation refinement
 
+Typical role selection:
+
+- BMAD PM for PRDs, epics, stories, and issue planning
+- BMAD Architect for workflow contracts, schemas, structure, and cross-node design
+- BMAD Dev for implementation work in prompts, scripts, schemas, and workflows
+- BMAD Tech Writer for documentation cleanup and agent-facing clarity
+- ho-pe for repo stewardship, orchestration, and cross-cutting changes
+
 ### Step 3: Follow The Contract Chain
 
 For finance automation, these layers depend on each other:
@@ -51,6 +59,8 @@ Use the mono repo pattern where it helps:
 - `agent/story-{id}-{slug}` for story implementation
 - `docs/{slug}` for documentation-only work
 - `fix/{slug}` for bug fixes
+
+The branch naming is model-agnostic. OpenAI is the runtime. BMAD or `ho-pe` is the working role.
 
 ### Pull Requests
 

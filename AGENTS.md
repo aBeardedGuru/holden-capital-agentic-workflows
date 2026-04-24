@@ -13,14 +13,25 @@ It is not the production application monorepo. It is the place where agents:
 - maintain prompts and schemas
 - build workflow blueprints and local worker tooling
 
+## Operating Model
+
+This repo uses:
+
+- `ho-pe` as the custom primary orchestrator and repo steward
+- BMAD agents as the specialist working roles
+- OpenAI models as the runtime/model layer
+
+The role taxonomy should follow BMAD and your custom `ho-pe` agent, not Claude model names.
+
 ## Access Matrix
 
 | Agent | Role | Permission | Primary Use |
 | --- | --- | --- | --- |
-| Primary OpenAI agent | Repo steward | ADMIN | Defines structure, approves standards, creates epics/stories/issues |
-| OpenAI maintainer agent | Workflow maintainer | MAINTAINER | Implements docs, schemas, prompts, scripts, workflows, PRs |
-| OpenAI developer agent | Feature developer | DEVELOPER | Implements assigned story-scoped changes |
-| OpenAI reviewer agent | Reviewer | REVIEWER | Reviews docs, schemas, scripts, workflows, tests |
+| ho-pe | Repo steward / orchestrator | ADMIN | Defines structure, approves standards, creates epics/stories/issues, coordinates BMAD agents |
+| BMAD PM | Product planning specialist | MAINTAINER | PRDs, requirements, epics, issue shaping |
+| BMAD Architect | System design specialist | MAINTAINER | Architecture, contracts, workflow design, repo structure |
+| BMAD Dev | Implementation specialist | DEVELOPER | Docs, schemas, prompts, scripts, workflows, story-scoped changes |
+| BMAD Tech Writer / QA / Reviewer | Validation specialist | REVIEWER | Reviews docs, contracts, workflow behavior, and readiness |
 
 ## Permission Model
 
@@ -100,6 +111,8 @@ Recommended branch names:
 - `agent/story-{id}-{slug}`
 - `fix/{slug}`
 - `docs/{slug}`
+
+If a BMAD agent is acting on a story, the branch can still use `agent/story-{id}-{slug}`. The runtime model is OpenAI; the working role is BMAD.
 
 ## Before Starting Work
 
