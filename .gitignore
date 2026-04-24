@@ -3,3 +3,5 @@ runtime/
 .env
 .env.local
 .DS_Store
+.agents/
+_bmad/
