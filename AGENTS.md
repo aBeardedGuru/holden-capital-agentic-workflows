@@ -12,7 +12,7 @@ It is not the production application monorepo. It is the place where agents:
 - document epics, stories, and operating rules
 - build and validate n8n workflow support artifacts
 
-This repo adopts the Holden Capital enterprise governance baseline defined in [docs/enterprise-development-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/docs/enterprise-development-standards.md).
+This repo adopts the Holden Capital enterprise governance baseline defined in [governance/enterprise-development-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/governance/enterprise-development-standards.md).
 
 ## Operating Model
 
@@ -67,6 +67,7 @@ The role taxonomy should follow BMAD and your custom `ho-pe` agent, not Claude m
 | `/docs` | Business, workflow, and planning documentation | PM, architect, tech writer |
 | `/planning` | PRD, epics, and future story planning | PM, architect |
 | `/automation` | Prompts, schemas, scripts, workflows, and samples | Architect, dev |
+| `/governance` | Enterprise standards and repo governance baselines | ho-pe, architect |
 | `/.github` | Issue/PR process and repo automation metadata | Admin, maintainer |
 
 ## Access Rules
@@ -93,7 +94,7 @@ Only ADMIN should make broad structural changes to:
 Agents must not commit runtime state, credentials, or generated operational data. `runtime/` is local-only.
 
 ### Rule 6: Enterprise Standards Apply By Default
-If repo-local guidance is silent, agents should follow the Holden Capital enterprise standards from `docs/enterprise-development-standards.md`.
+If repo-local guidance is silent, agents should follow the Holden Capital enterprise standards from `governance/enterprise-development-standards.md`.
 
 ## Git and GitHub Working Model
 
@@ -117,5 +118,5 @@ If a BMAD agent is acting on a story, the branch can still use `agent/story-{id}
 
 1. Read this file.
 2. Read [INSTRUCTIONS.md](/home/dank/Projects/holden-capital-agentic-workflows/INSTRUCTIONS.md).
-3. Read the node-local `AGENTS.md` and `INSTRUCTIONS.md` for `docs/`, `planning/`, or `automation/` as needed.
+3. Read the node-local `AGENTS.md` and `INSTRUCTIONS.md` for `governance/`, `docs/`, `planning/`, or `automation/` as needed.
 4. Confirm whether you are working from an epic/story issue, a planning artifact, or an ad hoc maintenance task.

@@ -11,7 +11,7 @@ This node contains the human-readable source of truth for repo purpose, workflow
 
 ## Rules
 
-- Follow `docs/enterprise-development-standards.md` as the default documentation governance baseline.
+- Follow `governance/enterprise-development-standards.md` as the default documentation governance baseline.
 - Keep docs aligned with actual schemas, scripts, and workflows.
 - Prefer updating existing docs over creating overlapping docs.
 - Write for future agents first: explicit assumptions beat narrative prose.

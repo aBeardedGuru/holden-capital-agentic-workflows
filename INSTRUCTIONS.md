@@ -9,9 +9,9 @@ This file tells agents how to work in this repo efficiently and consistently.
 Read these in order:
 
 1. `AGENTS.md`
-2. `docs/enterprise-development-standards.md`
+2. `governance/enterprise-development-standards.md`
 3. `PROJECT_CONTEXT.md`
-4. Node-local `AGENTS.md` and `INSTRUCTIONS.md` for `docs/`, `planning/`, or `automation/`
+4. Node-local `AGENTS.md` and `INSTRUCTIONS.md` for `governance/`, `docs/`, `planning/`, or `automation/`
 5. Relevant docs in `docs/`
 6. Relevant planning artifacts in `planning/`
 
@@ -113,6 +113,7 @@ Before marking work complete:
 - `docs/`: business and implementation documentation
 - `planning/`: PRD and epic breakdowns
 - `automation/`: prompts, schemas, scripts, workflows, and samples
+- `governance/`: enterprise and repo-level standards
 - `.github/`: issue and PR process templates
 
 ## When In Doubt

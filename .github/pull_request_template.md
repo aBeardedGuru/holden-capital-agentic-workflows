@@ -9,7 +9,7 @@
 ## Enterprise Standards Check
 
 - [ ] Issue body was specific enough to implement from directly
-- [ ] Change follows `docs/enterprise-development-standards.md`
+- [ ] Change follows `governance/enterprise-development-standards.md`
 - [ ] Branch scope stayed focused to one implementation concern
 
 ## Nodes Changed

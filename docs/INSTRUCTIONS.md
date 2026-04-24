@@ -21,4 +21,4 @@
 - `automation/`
 - `planning/`
 - GitHub epic/story issues
-- `docs/enterprise-development-standards.md`
+- `governance/enterprise-development-standards.md`
