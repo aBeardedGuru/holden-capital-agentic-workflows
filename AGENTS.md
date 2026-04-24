@@ -67,6 +67,7 @@ The role taxonomy should follow BMAD and your custom `ho-pe` agent, not Claude m
 | `/docs` | Business, workflow, and planning documentation | PM, architect, tech writer |
 | `/planning` | PRD, epics, and future story planning | PM, architect |
 | `/automation` | Prompts, schemas, scripts, workflows, and samples | Architect, dev |
+| `/skills` | Repo-local Codex skills for repeated workflows | ho-pe, architect, dev |
 | `/governance` | Enterprise standards and repo governance baselines | ho-pe, architect |
 | `/.github` | Issue/PR process and repo automation metadata | Admin, maintainer |
 
@@ -99,6 +100,9 @@ If repo-local guidance is silent, agents should follow the Holden Capital enterp
 ### Rule 7: Prefer Worktrees For Parallel Agent Work
 If multiple agents are active on the same machine in this repo, prefer separate git worktrees instead of sharing one checkout.
 
+### Rule 8: Prefer Repo-Local Skills For Repeated Work
+If a repeated workflow is specific to Holden Capital and fits a reusable pattern, prefer a repo-local skill in `skills/` over re-explaining the process in ad hoc prompts or scattered docs.
+
 ## Git and GitHub Working Model
 
 This repo follows the Holden Capital enterprise GitHub model adapted from `holden-capital-mono`:
@@ -111,6 +115,7 @@ This repo follows the Holden Capital enterprise GitHub model adapted from `holde
 
 The detailed GitHub execution rules live in [governance/github-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/governance/github-standards.md).
 The detailed git operating rules live in [governance/git-ops-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/governance/git-ops-standards.md).
+The preferred tooling order lives in [governance/agent-tooling-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/governance/agent-tooling-standards.md).
 
 Recommended branch names:
 
@@ -125,5 +130,5 @@ If a BMAD agent is acting on a story, the branch should usually use `agent/story
 
 1. Read this file.
 2. Read [INSTRUCTIONS.md](/home/dank/Projects/holden-capital-agentic-workflows/INSTRUCTIONS.md).
-3. Read the node-local `AGENTS.md` and `INSTRUCTIONS.md` for `governance/`, `docs/`, `planning/`, or `automation/` as needed.
+3. Read the node-local `AGENTS.md` and `INSTRUCTIONS.md` for `governance/`, `skills/`, `docs/`, `planning/`, or `automation/` as needed.
 4. Confirm whether you are working from an epic/story issue, a planning artifact, or an ad hoc maintenance task.

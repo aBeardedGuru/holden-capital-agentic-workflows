@@ -24,6 +24,7 @@ It exists to make agent work reliable across:
 - Bash for local worker automation
 - GitHub Issues and PRs for execution workflow
 - Git worktrees for parallel local branch isolation
+- GitHub CLI and other CLI-first tooling for agent operations
 - OpenAI models for agent runtime
 - BMAD agents plus `ho-pe` for operating roles
 
@@ -51,3 +52,4 @@ Google Drive -> n8n -> local job packet -> Codex CLI -> JSON output -> Google Sh
 ## Canonical Implementation Surfaces
 
 - `automation/`
+- `skills/`

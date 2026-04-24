@@ -17,5 +17,6 @@ Use this node for standards that agents should be able to load quickly and trust
 - root `INSTRUCTIONS.md`
 - `governance/github-standards.md`
 - `governance/git-ops-standards.md`
+- `governance/agent-tooling-standards.md`
 - `.github` issue and PR templates
 - any node docs that inherit governance defaults

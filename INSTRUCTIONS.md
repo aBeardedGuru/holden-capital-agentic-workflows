@@ -12,16 +12,18 @@ Read these in order:
 2. `governance/enterprise-development-standards.md`
 3. `governance/github-standards.md` for issue, branch, or PR work
 4. `governance/git-ops-standards.md` for local branch and worktree setup
-5. `PROJECT_CONTEXT.md`
-6. Node-local `AGENTS.md` and `INSTRUCTIONS.md` for `governance/`, `docs/`, `planning/`, or `automation/`
-7. Relevant docs in `docs/`
-8. Relevant planning artifacts in `planning/`
+5. `governance/agent-tooling-standards.md` for CLI/API tool choice
+6. `PROJECT_CONTEXT.md`
+7. Node-local `AGENTS.md` and `INSTRUCTIONS.md` for `governance/`, `skills/`, `docs/`, `planning/`, or `automation/`
+8. Relevant docs in `docs/`
+9. Relevant planning artifacts in `planning/`
 
 ### Step 2: Identify Work Type
 
 Work in this repo usually falls into one of these buckets:
 
 - planning and decomposition
+- skill-driven repeated workflow execution
 - prompt/schema contract work
 - local worker script work
 - n8n blueprint work
@@ -75,6 +77,14 @@ When parallel agent work is happening on the same machine, prefer one git worktr
 
 Do not have multiple active agents share one dirty checkout.
 
+### Tool Choice
+
+Prefer:
+
+- `gh` over MCP for GitHub work
+- local CLI tools over browser-driven workflows
+- direct APIs only when CLI paths are insufficient
+
 ### Pull Requests
 
 PRs should include:
@@ -121,6 +131,7 @@ Before marking work complete:
 - `docs/`: business and implementation documentation
 - `planning/`: PRD and epic breakdowns
 - `automation/`: prompts, schemas, scripts, workflows, and samples
+- `skills/`: repo-local Codex skills for repeated workflows
 - `governance/`: enterprise and repo-level standards
 - `.github/`: issue and PR process templates
 

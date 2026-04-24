@@ -24,6 +24,7 @@ Holden Capital development uses:
 - OpenAI models as the runtime layer
 - GitHub issues and pull requests as the execution surface
 - git worktrees as the recommended local parallel-development model
+- CLI-first tooling, with `gh` preferred over MCP for GitHub work
 
 The role taxonomy is BMAD plus `ho-pe`, not model-family specific.
 
@@ -82,6 +83,10 @@ Follow `governance/github-standards.md` for issue structure, branch naming, prom
 ## Git Operations Standard
 
 Follow `governance/git-ops-standards.md` for local branch handling, worktree usage, and parallel agent coordination on shared machines.
+
+## Agent Tooling Standard
+
+Follow `governance/agent-tooling-standards.md` for CLI, API, and integration tool preference.
 
 ## Contract-First Delivery Standard
 
@@ -149,4 +154,5 @@ In `holden-capital-agentic-workflows`, these enterprise standards are applied th
 - [PROJECT_CONTEXT.md](/home/dank/Projects/holden-capital-agentic-workflows/PROJECT_CONTEXT.md)
 - [github-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/governance/github-standards.md)
 - [git-ops-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/governance/git-ops-standards.md)
+- [agent-tooling-standards.md](/home/dank/Projects/holden-capital-agentic-workflows/governance/agent-tooling-standards.md)
 - `.github` issue and PR templates
