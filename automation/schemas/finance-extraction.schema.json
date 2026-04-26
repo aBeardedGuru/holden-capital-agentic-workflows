@@ -7,7 +7,9 @@
   "required": [
     "schema_version",
     "job_id",
+    "flow_name",
     "status",
+    "source",
     "document_type",
     "vendor_or_payee",
     "document_date",
@@ -17,26 +19,63 @@
     "account_last4",
     "invoice_number",
     "due_date",
-    "category",
-    "property_or_entity",
-    "tax_relevant",
     "confidence",
     "summary",
-    "review_reason",
-    "extraction_notes"
+    "suggested_category",
+    "suggested_property_or_entity",
+    "review",
+    "duplicate_check",
+    "audit"
   ],
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.0"
+      "const": "1.1"
     },
     "job_id": {
       "type": "string",
       "minLength": 1
     },
+    "flow_name": {
+      "type": "string",
+      "const": "finance_document_intake"
+    },
     "status": {
       "type": "string",
-      "enum": ["processed", "needs_review", "failed"]
+      "enum": ["processed", "needs_review", "duplicate", "failed"]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system",
+        "drive_file_id",
+        "drive_file_name",
+        "drive_file_url",
+        "mime_type"
+      ],
+      "properties": {
+        "system": {
+          "type": "string",
+          "enum": ["google_drive"]
+        },
+        "drive_file_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "drive_file_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "drive_file_url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mime_type": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     },
     "document_type": {
       "type": "string",
@@ -83,28 +122,219 @@
       "type": ["string", "null"],
       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
     },
-    "category": {
-      "type": ["string", "null"]
-    },
-    "property_or_entity": {
-      "type": ["string", "null"]
-    },
-    "tax_relevant": {
-      "type": ["boolean", "null"]
-    },
     "confidence": {
       "type": "number",
       "minimum": 0,
       "maximum": 1
     },
+    "suggested_category": {
+      "type": ["string", "null"]
+    },
+    "suggested_property_or_entity": {
+      "type": ["string", "null"]
+    },
     "summary": {
       "type": "string"
     },
-    "review_reason": {
-      "type": ["string", "null"]
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "queue_entry_required",
+        "reason",
+        "recommended_action",
+        "status",
+        "resolution_notes"
+      ],
+      "properties": {
+        "queue_entry_required": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": ["string", "null"]
+        },
+        "recommended_action": {
+          "type": ["string", "null"]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_needed",
+            "pending",
+            "approved",
+            "corrected",
+            "rejected",
+            "needs_more_info"
+          ]
+        },
+        "resolution_notes": {
+          "type": ["string", "null"]
+        }
+      }
     },
-    "extraction_notes": {
-      "type": ["string", "null"]
+    "duplicate_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "idempotency_key",
+        "is_duplicate",
+        "duplicate_reason",
+        "duplicate_of_job_id"
+      ],
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "is_duplicate": {
+          "type": "boolean"
+        },
+        "duplicate_reason": {
+          "type": ["string", "null"]
+        },
+        "duplicate_of_job_id": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "processed_at",
+        "output_path",
+        "final_status",
+        "failure_reason_code",
+        "failure_reason",
+        "reviewer",
+        "reviewed_at",
+        "original_value",
+        "corrected_value",
+        "correction_reason"
+      ],
+      "properties": {
+        "processed_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "output_path": {
+          "type": ["string", "null"]
+        },
+        "final_status": {
+          "type": "string",
+          "enum": ["processed", "needs_review", "duplicate", "failed"]
+        },
+        "failure_reason_code": {
+          "type": ["string", "null"]
+        },
+        "failure_reason": {
+          "type": ["string", "null"]
+        },
+        "reviewer": {
+          "type": ["string", "null"]
+        },
+        "reviewed_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "original_value": {
+          "type": ["string", "null"]
+        },
+        "corrected_value": {
+          "type": ["string", "null"]
+        },
+        "correction_reason": {
+          "type": ["string", "null"]
+        }
+      }
     }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "needs_review"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "review": {
+            "properties": {
+              "queue_entry_required": {
+                "const": true
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "const": "pending"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "duplicate"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "duplicate_check": {
+            "properties": {
+              "is_duplicate": {
+                "const": true
+              },
+              "duplicate_reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "failed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "audit": {
+            "properties": {
+              "failure_reason_code": {
+                "type": "string",
+                "minLength": 1
+              },
+              "failure_reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "review": {
+            "properties": {
+              "queue_entry_required": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "not": {
+    "required": ["account_number"]
   }
 }

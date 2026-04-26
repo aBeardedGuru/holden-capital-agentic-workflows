@@ -1,12 +1,29 @@
 {
+  "schema_version": "1.1",
   "job_id": "finance-doc-sample-001",
-  "created_at": "2026-04-23T08:30:00Z",
-  "source": "google_drive",
-  "drive_file_id": "sample-drive-file-id",
-  "drive_file_name": "sample-receipt.txt",
-  "drive_file_url": "https://drive.google.com/file/d/sample-drive-file-id/view",
-  "mime_type": "text/plain",
-  "extracted_text_path": "REPLACE_WITH_REPO_ROOT/automation/samples/sample-receipt-text.txt",
-  "output_path": "REPLACE_WITH_REPO_ROOT/runtime/finance-document-intake/outputs/finance-doc-sample-001.json",
-  "schema_version": "1.0"
+  "flow_name": "finance_document_intake",
+  "source": {
+    "system": "google_drive",
+    "drive_file_id": "sample-drive-file-id",
+    "drive_file_name": "sample-receipt.txt",
+    "drive_file_url": "https://drive.google.com/file/d/sample-drive-file-id/view",
+    "mime_type": "text/plain",
+    "source_file_path": "REPLACE_WITH_REPO_ROOT/runtime/finance-document-intake/source/sample-receipt.txt",
+    "source_folder_id": "HOLDEN_FINANCE_INBOX_FOLDER_ID"
+  },
+  "paths": {
+    "job_packet_path": "REPLACE_WITH_REPO_ROOT/runtime/finance-document-intake/inbox/finance-doc-sample-001.json",
+    "extracted_text_path": "REPLACE_WITH_REPO_ROOT/automation/samples/sample-receipt-text.txt",
+    "output_path": "REPLACE_WITH_REPO_ROOT/runtime/finance-document-intake/outputs/finance-doc-sample-001.json",
+    "failure_output_path": "REPLACE_WITH_REPO_ROOT/runtime/finance-document-intake/outputs/finance-doc-sample-001.failed.json"
+  },
+  "processing": {
+    "created_at": "2026-04-23T08:30:00Z",
+    "queued_at": "2026-04-23T08:30:05Z",
+    "processing_started_at": null,
+    "processing_completed_at": null,
+    "status": "queued",
+    "idempotency_key": "google_drive:sample-drive-file-id",
+    "attempt_count": 1
+  }
 }

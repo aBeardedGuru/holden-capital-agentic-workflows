@@ -5,57 +5,137 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "schema_version",
     "job_id",
-    "created_at",
+    "flow_name",
     "source",
-    "drive_file_id",
-    "drive_file_name",
-    "drive_file_url",
-    "mime_type",
-    "extracted_text_path",
-    "output_path",
-    "schema_version"
+    "paths",
+    "processing"
   ],
   "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.1"
+    },
     "job_id": {
       "type": "string",
       "minLength": 1
     },
-    "created_at": {
+    "flow_name": {
       "type": "string",
-      "format": "date-time"
+      "const": "finance_document_intake"
     },
     "source": {
-      "type": "string",
-      "enum": ["google_drive"]
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system",
+        "drive_file_id",
+        "drive_file_name",
+        "drive_file_url",
+        "mime_type"
+      ],
+      "properties": {
+        "system": {
+          "type": "string",
+          "enum": ["google_drive"]
+        },
+        "drive_file_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "drive_file_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "drive_file_url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mime_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_file_path": {
+          "type": ["string", "null"],
+          "minLength": 1
+        },
+        "source_folder_id": {
+          "type": ["string", "null"],
+          "minLength": 1
+        }
+      }
     },
-    "drive_file_id": {
-      "type": "string",
-      "minLength": 1
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "job_packet_path",
+        "output_path",
+        "failure_output_path"
+      ],
+      "properties": {
+        "job_packet_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "extracted_text_path": {
+          "type": ["string", "null"],
+          "minLength": 1
+        },
+        "output_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "failure_output_path": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     },
-    "drive_file_name": {
-      "type": "string",
-      "minLength": 1
-    },
-    "drive_file_url": {
-      "type": "string",
-      "minLength": 1
-    },
-    "mime_type": {
-      "type": "string",
-      "minLength": 1
-    },
-    "extracted_text_path": {
-      "type": "string",
-      "minLength": 1
-    },
-    "output_path": {
-      "type": "string",
-      "minLength": 1
-    },
-    "schema_version": {
-      "type": "string",
-      "const": "1.0"
+    "processing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "created_at",
+        "queued_at",
+        "status",
+        "idempotency_key",
+        "attempt_count"
+      ],
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "queued_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "processing_started_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "processing_completed_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["queued", "processing", "complete", "failed"]
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attempt_count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     }
+  },
+  "not": {
+    "required": ["account_number"]
   }
 }

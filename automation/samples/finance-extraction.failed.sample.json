@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.1",
+  "job_id": "finance-doc-sample-002",
+  "flow_name": "finance_document_intake",
+  "status": "failed",
+  "source": {
+    "system": "google_drive",
+    "drive_file_id": "missing-text-drive-file-id",
+    "drive_file_name": "missing-text.pdf",
+    "drive_file_url": "https://drive.google.com/file/d/missing-text-drive-file-id/view",
+    "mime_type": "application/pdf"
+  },
+  "document_type": "unknown",
+  "vendor_or_payee": null,
+  "document_date": null,
+  "amount": null,
+  "currency": null,
+  "payment_method": null,
+  "account_last4": null,
+  "invoice_number": null,
+  "due_date": null,
+  "confidence": 0,
+  "suggested_category": null,
+  "suggested_property_or_entity": null,
+  "summary": "Document processing failed before extraction completed.",
+  "review": {
+    "queue_entry_required": true,
+    "reason": "Extracted text file was not available for processing.",
+    "recommended_action": "Regenerate extracted text and rerun the job.",
+    "status": "pending",
+    "resolution_notes": null
+  },
+  "duplicate_check": {
+    "idempotency_key": "google_drive:missing-text-drive-file-id",
+    "is_duplicate": false,
+    "duplicate_reason": null,
+    "duplicate_of_job_id": null
+  },
+  "audit": {
+    "processed_at": "2026-04-23T08:32:10Z",
+    "output_path": "REPLACE_WITH_REPO_ROOT/runtime/finance-document-intake/outputs/finance-doc-sample-002.json",
+    "final_status": "failed",
+    "failure_reason_code": "missing_extracted_text",
+    "failure_reason": "Extracted text file was not found at the expected path.",
+    "reviewer": null,
+    "reviewed_at": null,
+    "original_value": null,
+    "corrected_value": null,
+    "correction_reason": null
+  }
+}

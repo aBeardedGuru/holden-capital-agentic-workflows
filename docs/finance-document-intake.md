@@ -1,146 +1,95 @@
 # Finance Document Intake
 
-This project contains the n8n/Codex bridge for finance document automation.
+## Purpose
 
-Goal:
+Define the contract and runtime flow for Google Drive based finance document intake, local Codex extraction, Google Sheets updates, review routing, and audit-safe file handling.
 
-1. Put receipts, invoices, statements, and finance documents in Google Drive.
-2. Let n8n create a local job packet.
-3. Let Codex CLI classify and extract structured data without OpenAI API billing.
-4. Let n8n validate the JSON, update Google Sheets, and move the Drive file.
+Use this document with the detailed operating contract in [finance-ledger-operating-contract.md](/home/dank/Projects/holden-capital-agentic-workflows/docs/finance-ledger-operating-contract.md).
 
-## Architecture
+## Flow Summary
 
 ```text
 Google Drive 00_Inbox
-  -> n8n Google Drive node
-  -> local job JSON + extracted text
+  -> n8n lists and downloads source files
+  -> n8n stages extracted text and writes one job packet
   -> automation/scripts/codex-finance-worker.sh
-  -> Codex CLI
-  -> JSON result
-  -> n8n Google Sheets node
-  -> Google Drive processed/review/error folder
+  -> Codex CLI returns structured extraction JSON
+  -> n8n validates output and updates Google Sheets
+  -> n8n moves the Drive file to processed, review, or error
 ```
 
-Codex is used through the local CLI session. n8n does not store ChatGPT credentials and does not use the OpenAI API.
+Current live variant for simple personal-drive triage:
 
-## Required n8n Credentials
+```text
+Google Drive Holden Capital/Finance Automation/00_INBOX
+  -> n8n lists all files in 00_INBOX
+  -> n8n downloads and extracts text
+  -> AI Intake Classifier node (prompt-driven) classifies each document type
+  -> only document_type=invoice rows are appended to the Expenses sheet
+  -> files are moved to 10_DONE_INVOICES, 20_DONE_BANK_STATEMENTS, 30_DONE_OTHER, 90_REVIEW, or 99_ERROR
+```
 
-Existing credentials on the server:
+Workflow artifact for this variant:
+
+- [automation/workflows/google-drive-download-for-processing.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/google-drive-download-for-processing.json)
+
+Design constraints:
+
+- Google Drive is the intake and filing surface.
+- Google Sheets is the first ledger, review queue, and run log surface.
+- Codex CLI runs locally and does not require OpenAI API billing from n8n.
+- Source documents are never deleted.
+- Runtime operational data stays under `runtime/` and is never committed.
+
+## Required Google Integrations
+
+Required n8n credentials:
 
 ```text
 Google Drive account
 Google Sheets account
 ```
 
-No OpenAI API credential is required for this design.
+No OpenAI API credential is required for this flow.
 
-## Required Google Drive Folders
+## Contract References
 
-Create these folders and record their IDs in the n8n workflow config node:
+- Operating contract: [finance-ledger-operating-contract.md](/home/dank/Projects/holden-capital-agentic-workflows/docs/finance-ledger-operating-contract.md)
+- Job schema: [automation/schemas/finance-job.schema.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/schemas/finance-job.schema.json)
+- Extraction schema: [automation/schemas/finance-extraction.schema.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/schemas/finance-extraction.schema.json)
+- Worker script: [automation/scripts/codex-finance-worker.sh](/home/dank/Projects/holden-capital-agentic-workflows/automation/scripts/codex-finance-worker.sh)
+- n8n blueprint: [automation/workflows/finance-document-intake-codex-assisted.blueprint.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/finance-document-intake-codex-assisted.blueprint.json)
 
-```text
-Holden Finance Automation/
-  00_Inbox/
-  10_Processed/
-    Receipts/
-    Invoices/
-    Bank Statements/
-    Credit Card Statements/
-    Tax Documents/
-    Insurance/
-    Loan Documents/
-    Utilities/
-    Payroll/
-    Income/
-    Unknown/
-  90_Needs Review/
-  99_Errors/
-```
+## Required Drive And Sheet Setup
 
-## Required Google Sheet
+Before activation:
 
-Create a spreadsheet named `Holden Finance Ledger` with these tabs:
+1. Create the simple Drive folder tree used by the live workflow:
 
 ```text
-Transactions
-Documents
-Review Queue
-Run Log
+Holden Capital/
+  Finance Automation/
+    00_INBOX/
+    10_DONE_INVOICES/
+    20_DONE_BANK_STATEMENTS/
+    30_DONE_OTHER/
+    90_REVIEW/
+    99_ERROR/
 ```
 
-### Transactions Columns
+2. Create the `Holden Finance Ledger` spreadsheet with `Transactions`, `Documents`, `Review Queue`, and `Run Log` tabs.
+3. Record only placeholder IDs in workflow config nodes or environment-local config.
+4. Do not store credentials, live folder IDs tied to secrets workflows, or full account numbers in tracked files.
+
+## Runtime Paths
+
+Base runtime directory:
 
 ```text
-processed_at
-document_date
-vendor_or_payee
-document_type
-category
-property_or_entity
-amount
-currency
-payment_method
-account_last4
-invoice_number
-due_date
-tax_relevant
-confidence
-summary
-drive_file_id
-drive_file_url
-source_file_name
-status
-review_reason
+runtime/finance-document-intake/
 ```
 
-### Documents Columns
-
-```text
-processed_at
-job_id
-drive_file_id
-drive_file_url
-source_file_name
-mime_type
-document_type
-classification_confidence
-codex_output_path
-raw_extraction_json
-```
-
-### Review Queue Columns
-
-```text
-created_at
-job_id
-drive_file_id
-drive_file_url
-source_file_name
-reason
-suggested_document_type
-suggested_amount
-suggested_vendor
-confidence
-status
-```
-
-### Run Log Columns
-
-```text
-run_at
-status
-files_seen
-jobs_created
-jobs_completed
-jobs_needing_review
-jobs_failed
-notes
-```
-
-## Local Worker Directories
-
-The worker script creates these directories under `runtime/finance-document-intake/`:
+Required subdirectories:
 
 ```text
 inbox/
@@ -150,53 +99,105 @@ failed/
 outputs/
 ```
 
-Files in `runtime/` are operational data and should not be committed.
+The worker creates the directories if they do not exist.
 
-## Job Contract
+## Job Lifecycle
 
-n8n writes one JSON job file per document:
+1. n8n detects a file in the Drive inbox.
+2. n8n downloads the source file and optionally creates an extracted text file.
+3. n8n writes a job packet to `runtime/finance-document-intake/inbox/<job_id>.json`.
+4. The local worker moves the packet into `processing/`, updates processing timestamps, and runs Codex CLI.
+5. The worker writes one JSON output to `outputs/`.
+6. The worker moves the job packet to `complete/` after valid output or `failed/` after terminal failure.
+7. n8n reads the output JSON and:
+   - appends `Transactions` and `Documents` rows
+   - appends a `Review Queue` row when `review.queue_entry_required` is true
+   - appends a `Run Log` row for batch visibility
+   - moves the Drive file to the correct processed, review, or error folder
 
-```text
-runtime/finance-document-intake/inbox/<job_id>.json
+## Worker Behavior
+
+The worker runs locally:
+
+```bash
+automation/scripts/codex-finance-worker.sh --once
 ```
 
-The job must match `automation/schemas/finance-job.schema.json`.
+Required behavior:
 
-Codex writes:
+- read one queued job packet
+- require valid extracted text before extraction starts
+- invoke Codex CLI with the finance extraction prompt and output schema
+- write JSON output that matches the extraction schema
+- on failure, write a machine-readable failure JSON before moving the job packet to `failed/`
+- never delete the original source document
 
-```text
-runtime/finance-document-intake/outputs/<job_id>.json
-```
+## Review Queue Rules
 
-The output must match `automation/schemas/finance-extraction.schema.json`.
+Create a `Review Queue` row when any of these are true:
 
-## First Manual Test
+- confidence is below the chosen review threshold
+- required fields are missing
+- the document is ambiguous
+- the job failed
+- duplicate handling needs a human decision
 
-1. Place one receipt PDF or text-extracted sample in the job inbox.
+Required review statuses:
+
+- `pending`
+- `approved`
+- `corrected`
+- `rejected`
+- `needs_more_info`
+
+When a human corrects a value, preserve the original suggested value, corrected value, reviewer, timestamp, and reason in the audit trail.
+
+## Duplicate And Audit Rules
+
+Every processed item must be traceable through:
+
+- `flow_name`
+- `job_id`
+- source ID or path
+- source URL when available
+- idempotency key
+- output JSON path
+- processing timestamp
+- final status
+
+Duplicate decisions must record:
+
+- whether the item is a duplicate
+- idempotency key
+- duplicate reason
+- prior job reference when known
+
+## Safety Rules
+
+- Do not store bank login credentials, API keys, or n8n credentials in job packets, prompts, schemas, samples, or workflows.
+- Do not store full account numbers anywhere in the contract chain.
+- Keep only `account_last4` when account metadata is needed.
+- Keep production posting and external reminders out of this flow.
+- Keep n8n responsible for Drive and Sheets side effects.
+- Keep Codex responsible for structured extraction only.
+
+## Manual Validation
+
+1. Put a sample job packet in `runtime/finance-document-intake/inbox/`.
 2. Run:
 
 ```bash
 automation/scripts/codex-finance-worker.sh --once
 ```
 
-3. Confirm output exists:
+3. Confirm output exists in `runtime/finance-document-intake/outputs/`.
+4. Validate the output JSON and any sample files.
+5. Confirm n8n can map the output into `Transactions`, `Documents`, `Review Queue`, and `Run Log`.
 
-```bash
-ls runtime/finance-document-intake/outputs/
-```
+### One-file ingest smoke test
 
-4. Validate the output:
-
-```bash
-python3 -m json.tool runtime/finance-document-intake/outputs/<job_id>.json >/dev/null
-```
-
-5. Import or recreate `automation/workflows/finance-document-intake-codex-assisted.blueprint.json` in n8n and wire the folder/sheet IDs.
-
-## Safety Rules
-
-- Do not put bank login credentials in job JSON.
-- Do not store full account numbers. Last four digits only.
-- Do not delete source documents.
-- Keep n8n responsible for Drive and Sheets changes.
-- Keep Codex responsible only for classification and extraction JSON.
+1. Upload one invoice PDF into `00_INBOX`.
+2. Run one manual execution of the workflow in n8n.
+3. Confirm one expense row was appended in the configured `Expenses` sheet tab.
+4. Confirm the source file moved from `00_INBOX` to `10_DONE_INVOICES`.
+5. Repeat with a bank statement and confirm move to `20_DONE_BANK_STATEMENTS` without an expense-sheet append.

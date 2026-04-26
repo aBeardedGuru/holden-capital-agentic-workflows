@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.1",
+  "job_id": "finance-doc-sample-001",
+  "flow_name": "finance_document_intake",
+  "status": "processed",
+  "source": {
+    "system": "google_drive",
+    "drive_file_id": "sample-drive-file-id",
+    "drive_file_name": "sample-receipt.txt",
+    "drive_file_url": "https://drive.google.com/file/d/sample-drive-file-id/view",
+    "mime_type": "text/plain"
+  },
+  "document_type": "receipt",
+  "vendor_or_payee": "Acme Hardware",
+  "document_date": "2026-04-22",
+  "amount": 84.17,
+  "currency": "USD",
+  "payment_method": "business credit card",
+  "account_last4": "4242",
+  "invoice_number": null,
+  "due_date": null,
+  "confidence": 0.94,
+  "suggested_category": "Repairs & Maintenance",
+  "suggested_property_or_entity": "Holden Capital Operations",
+  "summary": "Hardware store receipt for maintenance supplies.",
+  "review": {
+    "queue_entry_required": false,
+    "reason": null,
+    "recommended_action": null,
+    "status": "not_needed",
+    "resolution_notes": null
+  },
+  "duplicate_check": {
+    "idempotency_key": "google_drive:sample-drive-file-id",
+    "is_duplicate": false,
+    "duplicate_reason": null,
+    "duplicate_of_job_id": null
+  },
+  "audit": {
+    "processed_at": "2026-04-23T08:31:42Z",
+    "output_path": "REPLACE_WITH_REPO_ROOT/runtime/finance-document-intake/outputs/finance-doc-sample-001.json",
+    "final_status": "processed",
+    "failure_reason_code": null,
+    "failure_reason": null,
+    "reviewer": null,
+    "reviewed_at": null,
+    "original_value": null,
+    "corrected_value": null,
+    "correction_reason": null
+  }
+}

@@ -2,6 +2,20 @@
 
 Enable the operator to capture finance documents, run local extraction, update Google Sheets, route files, and manage one review queue with audit trail.
 
+## Implementation Status
+
+Status date: 2026-04-26
+
+- Story 1.1: complete in `docs/finance-ledger-operating-contract.md` and `docs/finance-document-intake.md`.
+- Story 1.2: complete in `automation/schemas/finance-job.schema.json`, `automation/schemas/finance-extraction.schema.json`, and aligned samples.
+- Story 1.3: complete in `automation/scripts/codex-finance-worker.sh` and runtime directory contract docs.
+- Story 1.4: contract complete in docs and schema fields; workflow blueprints include review-queue integration notes.
+- Story 1.5: complete in extraction schema and docs with duplicate and audit fields.
+
+Conformance note:
+- The live n8n workflow `Google Drive INGEST Classification + Expense Sheet` was refactored to emit v1.1 job packets and invoice-only expense-sheet writes.
+- The repo workflow artifact `automation/workflows/google-drive-download-for-processing.json` was refactored to the same v1.1 contract and placeholder-safe credential references.
+
 ## Story 1.1: Define Finance Ledger And Drive Operating Contract
 
 As a Holden Capital operator,
@@ -109,3 +123,13 @@ So that I can explain where each row, exception, or skipped duplicate came from.
 **Given** a human changes a classification
 **When** the change is saved
 **Then** the original value, new value, reviewer, timestamp, and reason are captured in the audit trail.
+
+## Implementation Links
+
+- Story 1.1 operating contract: [docs/finance-ledger-operating-contract.md](/home/dank/Projects/holden-capital-agentic-workflows/docs/finance-ledger-operating-contract.md)
+- Story 1.1 and 1.3 flow doc: [docs/finance-document-intake.md](/home/dank/Projects/holden-capital-agentic-workflows/docs/finance-document-intake.md)
+- Story 1.2 job schema: [automation/schemas/finance-job.schema.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/schemas/finance-job.schema.json)
+- Story 1.2 and 1.5 extraction schema: [automation/schemas/finance-extraction.schema.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/schemas/finance-extraction.schema.json)
+- Story 1.3 worker contract implementation: [automation/scripts/codex-finance-worker.sh](/home/dank/Projects/holden-capital-agentic-workflows/automation/scripts/codex-finance-worker.sh)
+- Story 1.2 through 1.5 workflow blueprint notes: [automation/workflows/finance-document-intake-codex-assisted.blueprint.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/finance-document-intake-codex-assisted.blueprint.json)
+- Sample packets and outputs: [automation/samples/finance-job.sample.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/samples/finance-job.sample.json), [automation/samples/finance-extraction.sample.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/samples/finance-extraction.sample.json), [automation/samples/finance-extraction.failed.sample.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/samples/finance-extraction.failed.sample.json)
