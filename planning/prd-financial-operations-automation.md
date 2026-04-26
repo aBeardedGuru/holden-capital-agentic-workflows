@@ -67,7 +67,7 @@ The MVP must integrate with the existing finance document intake direction:
 
 - Google Drive is the document intake and filing surface.
 - n8n handles Drive, Sheets, and workflow orchestration.
-- Codex CLI handles local classification/extraction without OpenAI API billing.
+- OpenRouter-backed models run inside n8n for classification and extraction.
 - Google Sheets acts as the first ledger/review system.
 
 ## 5. Out Of Scope
@@ -92,8 +92,8 @@ The system must support the existing Drive-first intake model.
 
 Acceptance criteria:
 
-- Given a supported document is placed in `Holden Finance Automation/00_Inbox`, when intake runs, then a job packet is created for processing.
-- Given a job packet is created, when Codex classification completes, then JSON output is written to the expected output path.
+- Given a supported document is placed in `Holden Capital/Finance Automation/00_INBOX`, when intake runs, then the workflow creates a processing record.
+- Given a processing record is created, when OpenRouter classification completes, then strict JSON output is written to the expected output path.
 - Given output is valid, when n8n processes it, then Google Sheets is updated and the source file is moved to the correct processed/review/error folder.
 
 ### FR2: Weekly Financial Snapshot Dry Run
@@ -158,7 +158,7 @@ Acceptance criteria:
 | Secret handling | No bank credentials, API keys, or n8n credentials in repo or job JSON. |
 | Reliability | Failed jobs move to error state with reason. Source documents are never deleted. |
 | Traceability | Every output row can be traced back to source document or source record. |
-| Cost | Use local Codex CLI for extraction/classification; avoid OpenAI API billing in MVP. |
+| Cost | Use OpenRouter model routing in n8n with bounded payloads and model selection controls. |
 | Operability | Runtime files remain under ignored `runtime/` paths and are not committed. |
 
 ## 8. Data Model
@@ -248,8 +248,8 @@ MVP success is not "fully automated books." MVP success is measurable reduction 
 1. Use Google Drive and Google Sheets first.
    - Why: lowest setup cost, visible to owner/operator, easy for bookkeeper/CPA review.
 
-2. Keep Codex local.
-   - Why: avoids OpenAI API billing and keeps credentials out of n8n.
+2. Keep extraction/classification inside n8n using OpenRouter.
+   - Why: one orchestration surface, easier model swaps, and fewer local runtime dependencies.
 
 3. Start with draft/review workflows, not autoposting.
    - Why: financial automation needs trust before autonomy.

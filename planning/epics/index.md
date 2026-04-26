@@ -18,7 +18,7 @@
   - [Epic 1: Finance Intake And Review Foundation](./epic-1-finance-intake-and-review-foundation.md)
     - [Story 1.1: Define Finance Ledger And Drive Operating Contract](./epic-1-finance-intake-and-review-foundation.md#story-11-define-finance-ledger-and-drive-operating-contract)
     - [Story 1.2: Define Job Packet And Extraction Output Schemas](./epic-1-finance-intake-and-review-foundation.md#story-12-define-job-packet-and-extraction-output-schemas)
-    - [Story 1.3: Document Local Codex Worker Runtime Contract](./epic-1-finance-intake-and-review-foundation.md#story-13-document-local-codex-worker-runtime-contract)
+    - [Story 1.3: Document OpenRouter n8n Runtime Contract](./epic-1-finance-intake-and-review-foundation.md#story-13-document-openrouter-n8n-runtime-contract)
     - [Story 1.4: Define Review Queue Lifecycle](./epic-1-finance-intake-and-review-foundation.md#story-14-define-review-queue-lifecycle)
     - [Story 1.5: Define Shared Audit And Duplicate Decision Logging](./epic-1-finance-intake-and-review-foundation.md#story-15-define-shared-audit-and-duplicate-decision-logging)
   - [Epic 2: Expense Intake And Categorization](./epic-2-expense-intake-and-categorization.md)

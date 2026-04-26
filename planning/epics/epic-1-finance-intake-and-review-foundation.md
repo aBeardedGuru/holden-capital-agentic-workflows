@@ -1,6 +1,6 @@
 # Epic 1: Finance Intake And Review Foundation
 
-Enable the operator to capture finance documents, run local extraction, update Google Sheets, route files, and manage one review queue with audit trail.
+Enable the operator to capture finance documents, run OpenRouter-powered extraction in n8n, update Google Sheets, route files, and manage one review queue with audit trail.
 
 ## Implementation Status
 
@@ -8,7 +8,7 @@ Status date: 2026-04-26
 
 - Story 1.1: complete in `docs/finance-ledger-operating-contract.md` and `docs/finance-document-intake.md`.
 - Story 1.2: complete in `automation/schemas/finance-job.schema.json`, `automation/schemas/finance-extraction.schema.json`, and aligned samples.
-- Story 1.3: complete in `automation/scripts/codex-finance-worker.sh` and runtime directory contract docs.
+- Story 1.3: complete in n8n workflow contracts and runtime directory contract docs.
 - Story 1.4: contract complete in docs and schema fields; workflow blueprints include review-queue integration notes.
 - Story 1.5: complete in extraction schema and docs with duplicate and audit fields.
 
@@ -43,7 +43,7 @@ So that finance automation has a stable intake, ledger, and review surface befor
 
 As a workflow implementer,
 I want explicit job and extraction schemas,
-So that n8n and Codex exchange predictable finance data.
+So that n8n workflow nodes and model responses exchange predictable finance data.
 
 **Acceptance Criteria:**
 
@@ -52,7 +52,7 @@ So that n8n and Codex exchange predictable finance data.
 **Then** it conforms to `automation/schemas/finance-job.schema.json`
 **And** it includes job ID, Drive file metadata, source file path or ID, MIME type, extracted text path when available, and processing timestamps.
 
-**Given** Codex completes classification/extraction
+**Given** OpenRouter model classification/extraction completes in n8n
 **When** output JSON is validated
 **Then** it conforms to `automation/schemas/finance-extraction.schema.json`
 **And** it includes document type, vendor/payee, date, amount, currency, confidence, suggested category, suggested property/entity, status, and review reason when applicable.
@@ -62,24 +62,24 @@ So that n8n and Codex exchange predictable finance data.
 **Then** they reject full account numbers
 **And** allow only account last four digits when account metadata is needed.
 
-## Story 1.3: Document Local Codex Worker Runtime Contract
+## Story 1.3: Document OpenRouter n8n Runtime Contract
 
 As a workflow operator,
-I want a local worker contract for Codex-assisted extraction,
-So that document processing can run without OpenAI API billing or credential storage in n8n.
+I want a runtime contract for OpenRouter-assisted extraction in n8n,
+So that document processing runs in one orchestration surface with explicit model and credential boundaries.
 
 **Acceptance Criteria:**
 
 **Given** a job JSON file exists in `runtime/finance-document-intake/inbox/`
-**When** the local worker runs once
-**Then** it reads the job packet, invokes local Codex CLI according to the contract, and writes output JSON to `runtime/finance-document-intake/outputs/`.
+**When** the n8n flow runs once
+**Then** it invokes an OpenRouter model node according to the contract and writes output JSON to `runtime/finance-document-intake/outputs/`.
 
 **Given** runtime data is operational data
-**When** the worker contract is documented
+**When** the runtime contract is documented
 **Then** it defines `inbox`, `processing`, `complete`, `failed`, and `outputs` directories
 **And** it states runtime files must not be committed.
 
-**Given** a worker failure occurs
+**Given** an n8n extraction failure occurs
 **When** the job cannot be completed
 **Then** the contract defines how the job moves to failed state with a machine-readable reason.
 
@@ -130,6 +130,5 @@ So that I can explain where each row, exception, or skipped duplicate came from.
 - Story 1.1 and 1.3 flow doc: [docs/finance-document-intake.md](/home/dank/Projects/holden-capital-agentic-workflows/docs/finance-document-intake.md)
 - Story 1.2 job schema: [automation/schemas/finance-job.schema.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/schemas/finance-job.schema.json)
 - Story 1.2 and 1.5 extraction schema: [automation/schemas/finance-extraction.schema.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/schemas/finance-extraction.schema.json)
-- Story 1.3 worker contract implementation: [automation/scripts/codex-finance-worker.sh](/home/dank/Projects/holden-capital-agentic-workflows/automation/scripts/codex-finance-worker.sh)
-- Story 1.2 through 1.5 workflow blueprint notes: [automation/workflows/finance-document-intake-codex-assisted.blueprint.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/finance-document-intake-codex-assisted.blueprint.json)
+- Story 1.3 runtime implementation: [automation/workflows/google-drive-download-for-processing.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/google-drive-download-for-processing.json)
 - Sample packets and outputs: [automation/samples/finance-job.sample.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/samples/finance-job.sample.json), [automation/samples/finance-extraction.sample.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/samples/finance-extraction.sample.json), [automation/samples/finance-extraction.failed.sample.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/samples/finance-extraction.failed.sample.json)

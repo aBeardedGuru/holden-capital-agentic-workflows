@@ -24,8 +24,7 @@ Use this mental model:
 - `prompts/extract-finance-document.md`
 - `schemas/finance-job.schema.json`
 - `schemas/finance-extraction.schema.json`
-- `scripts/codex-finance-worker.sh`
-- `workflows/finance-document-intake-codex-assisted.blueprint.json`
+- `workflows/google-drive-download-for-processing.json`
 
 ## Simplicity Rule
 

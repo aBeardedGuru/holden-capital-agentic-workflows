@@ -6,7 +6,7 @@ This node contains the actual finance automation building blocks.
 
 - `prompts/` for extraction and classification prompts
 - `schemas/` for machine contracts
-- `scripts/` for local worker execution
+- `scripts/` for local support tooling and validation helpers
 - `workflows/` for n8n blueprint JSON
 - `samples/` for safe fixtures
 

@@ -30,7 +30,7 @@ It exists to make agent work reliable across:
 
 ## Core Flow
 
-Google Drive -> n8n -> local job packet -> Codex CLI -> JSON output -> Google Sheets -> review queue / processed state
+Google Drive -> n8n -> OpenRouter model step -> JSON output -> Google Sheets -> review queue / processed state
 
 ## Design Bias
 

@@ -2,9 +2,9 @@
 
 ## Functional Requirements
 
-FR1: Support Drive-first finance document intake that creates one processing job for each supported document placed in `Holden Finance Automation/00_Inbox`.
+FR1: Support Drive-first finance document intake that creates one processing job for each supported document placed in `Holden Capital/Finance Automation/00_INBOX`.
 
-FR2: Run local Codex CLI classification/extraction for each finance job and write structured JSON output to the expected runtime output path.
+FR2: Run OpenRouter-backed classification/extraction in n8n for each finance job and write structured JSON output to the expected output path.
 
 FR3: Process valid extraction output through n8n so Google Sheets is updated and the source document is moved to processed, review, or error folders.
 
@@ -56,7 +56,7 @@ NFR4: Failed jobs must move to an error state with a reason, and source document
 
 NFR5: Every output row must be traceable back to a source document or source record.
 
-NFR6: Use local Codex CLI for extraction/classification and avoid OpenAI API billing in MVP.
+NFR6: Use OpenRouter-backed model calls in n8n with bounded payload size and deterministic JSON output constraints.
 
 NFR7: Runtime files must remain under ignored `runtime/` paths and must not be committed.
 
@@ -64,10 +64,10 @@ NFR7: Runtime files must remain under ignored `runtime/` paths and must not be c
 
 - Use Google Drive as the document intake and filing surface.
 - Use n8n for Google Drive, Google Sheets, and workflow orchestration.
-- Use Codex CLI locally for classification/extraction.
+- Use OpenRouter-backed models in n8n for classification/extraction.
 - Use Google Sheets as the first review ledger with `Transactions`, `Documents`, `Review Queue`, and `Run Log` tabs.
 - Use `automation/schemas/finance-job.schema.json` for n8n-created job packets.
-- Use `automation/schemas/finance-extraction.schema.json` for Codex-created output.
+- Use `automation/schemas/finance-extraction.schema.json` for model-generated output.
 - Use runtime directories under `runtime/finance-document-intake/`.
 - Maintain explicit approval gates before any external reminder or accounting post.
 - Architecture and UX design artifacts do not yet exist for this feature set; this epic breakdown derives implementation constraints from the PRD and finance intake document.
@@ -80,7 +80,7 @@ No dedicated UX design specification was provided. The initial UX surface is Goo
 
 FR1: Epic 1 - Finance document intake.
 
-FR2: Epic 1 - Local Codex extraction.
+FR2: Epic 1 - OpenRouter extraction in n8n.
 
 FR3: Epic 1 - Sheets update and Drive file routing.
 

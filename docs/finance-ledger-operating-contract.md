@@ -26,7 +26,7 @@ Create one root folder and record the placeholder IDs in workflow config, not in
 
 ```text
 Holden Finance Automation/
-  00_Inbox/
+  00_INBOX/
   10_Processed/
     Receipts/
     Invoices/
@@ -136,7 +136,7 @@ Required columns:
 | `duplicate_detected` | Duplicate flag. |
 | `duplicate_reason` | Duplicate decision reason when applicable. |
 | `duplicate_of_job_id` | Earlier job that won duplicate resolution when applicable. |
-| `codex_output_path` | Local JSON output path. |
+| `model_output_path` | JSON output path captured from n8n model-processing nodes. |
 | `raw_extraction_json` | Serialized JSON or reference to stored output. |
 | `failure_reason_code` | Machine-readable failure code when status is `failed`. |
 | `failure_reason` | Human-readable failure reason when status is `failed`. |
@@ -208,10 +208,10 @@ outputs/
 
 Behavior:
 
-- `inbox/` holds queued job packets waiting for the local worker.
-- `processing/` holds the job packet currently being worked.
-- `complete/` holds the processed job packet after a valid output is written.
-- `failed/` holds the processed job packet after a terminal error.
+- `inbox/` holds queued job packets when file-based runtime staging is enabled.
+- `processing/` holds the job packet currently being worked when file-based staging is enabled.
+- `complete/` holds the processed job packet after a valid output is written when file-based staging is enabled.
+- `failed/` holds the processed job packet after a terminal error when file-based staging is enabled.
 - `outputs/` holds the machine-readable extraction result or failure result for each job.
 
 ## Job Packet Contract
@@ -241,7 +241,7 @@ The packet must include:
 
 ## Extraction Output Contract
 
-The local worker must write one output file to:
+The n8n extraction/classification path must write one output file to:
 
 ```text
 runtime/finance-document-intake/outputs/<job_id>.json

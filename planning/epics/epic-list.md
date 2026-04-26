@@ -2,7 +2,7 @@
 
 ## Epic 1: Finance Intake And Review Foundation
 
-Enable the operator to capture finance documents, run local extraction, update Google Sheets, route files, and manage one review queue with audit trail.
+Enable the operator to capture finance documents, run OpenRouter-powered extraction in n8n, update Google Sheets, route files, and manage one review queue with audit trail.
 
 **FRs covered:** FR1, FR2, FR3, FR16, FR17, FR18, FR19, FR20, FR21
 

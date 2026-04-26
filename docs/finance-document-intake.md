@@ -2,18 +2,17 @@
 
 ## Purpose
 
-Define the contract and runtime flow for Google Drive based finance document intake, local Codex extraction, Google Sheets updates, review routing, and audit-safe file handling.
+Define the contract and runtime flow for Google Drive based finance document intake, OpenRouter-powered extraction in n8n, Google Sheets updates, review routing, and audit-safe file handling.
 
 Use this document with the detailed operating contract in [finance-ledger-operating-contract.md](/home/dank/Projects/holden-capital-agentic-workflows/docs/finance-ledger-operating-contract.md).
 
 ## Flow Summary
 
 ```text
-Google Drive 00_Inbox
+Google Drive Holden Capital/Finance Automation/00_INBOX
   -> n8n lists and downloads source files
-  -> n8n stages extracted text and writes one job packet
-  -> automation/scripts/codex-finance-worker.sh
-  -> Codex CLI returns structured extraction JSON
+  -> n8n sends bounded payloads to an OpenRouter model node
+  -> model response is parsed and normalized to strict extraction JSON
   -> n8n validates output and updates Google Sheets
   -> n8n moves the Drive file to processed, review, or error
 ```
@@ -37,7 +36,7 @@ Design constraints:
 
 - Google Drive is the intake and filing surface.
 - Google Sheets is the first ledger, review queue, and run log surface.
-- Codex CLI runs locally and does not require OpenAI API billing from n8n.
+- OpenRouter-backed model inference runs in n8n using model-specific credentials.
 - Source documents are never deleted.
 - Runtime operational data stays under `runtime/` and is never committed.
 
@@ -48,17 +47,15 @@ Required n8n credentials:
 ```text
 Google Drive account
 Google Sheets account
+OpenRouter API credential
 ```
-
-No OpenAI API credential is required for this flow.
 
 ## Contract References
 
 - Operating contract: [finance-ledger-operating-contract.md](/home/dank/Projects/holden-capital-agentic-workflows/docs/finance-ledger-operating-contract.md)
 - Job schema: [automation/schemas/finance-job.schema.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/schemas/finance-job.schema.json)
 - Extraction schema: [automation/schemas/finance-extraction.schema.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/schemas/finance-extraction.schema.json)
-- Worker script: [automation/scripts/codex-finance-worker.sh](/home/dank/Projects/holden-capital-agentic-workflows/automation/scripts/codex-finance-worker.sh)
-- n8n blueprint: [automation/workflows/finance-document-intake-codex-assisted.blueprint.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/finance-document-intake-codex-assisted.blueprint.json)
+- Primary n8n workflow: [automation/workflows/google-drive-download-for-processing.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/google-drive-download-for-processing.json)
 
 ## Required Drive And Sheet Setup
 
@@ -81,55 +78,26 @@ Holden Capital/
 3. Record only placeholder IDs in workflow config nodes or environment-local config.
 4. Do not store credentials, live folder IDs tied to secrets workflows, or full account numbers in tracked files.
 
-## Runtime Paths
-
-Base runtime directory:
-
-```text
-runtime/finance-document-intake/
-```
-
-Required subdirectories:
-
-```text
-inbox/
-processing/
-complete/
-failed/
-outputs/
-```
-
-The worker creates the directories if they do not exist.
-
 ## Job Lifecycle
 
 1. n8n detects a file in the Drive inbox.
-2. n8n downloads the source file and optionally creates an extracted text file.
-3. n8n writes a job packet to `runtime/finance-document-intake/inbox/<job_id>.json`.
-4. The local worker moves the packet into `processing/`, updates processing timestamps, and runs Codex CLI.
-5. The worker writes one JSON output to `outputs/`.
-6. The worker moves the job packet to `complete/` after valid output or `failed/` after terminal failure.
-7. n8n reads the output JSON and:
+2. n8n downloads the source file and prepares bounded classifier input.
+3. n8n calls an OpenRouter model node with strict JSON response instructions.
+4. n8n parses and normalizes model output against extraction contracts.
+5. n8n writes rows and logs:
    - appends `Transactions` and `Documents` rows
    - appends a `Review Queue` row when `review.queue_entry_required` is true
    - appends a `Run Log` row for batch visibility
    - moves the Drive file to the correct processed, review, or error folder
 
-## Worker Behavior
+## Model Behavior
 
-The worker runs locally:
+The OpenRouter classifier step runs in n8n and must:
 
-```bash
-automation/scripts/codex-finance-worker.sh --once
-```
-
-Required behavior:
-
-- read one queued job packet
-- require valid extracted text before extraction starts
-- invoke Codex CLI with the finance extraction prompt and output schema
+- accept bounded file content and metadata from upstream nodes
+- enforce strict JSON schema-compatible output formatting
 - write JSON output that matches the extraction schema
-- on failure, write a machine-readable failure JSON before moving the job packet to `failed/`
+- on failure, emit a machine-readable failure reason and route the file to `99_ERROR`
 - never delete the original source document
 
 ## Review Queue Rules
@@ -179,20 +147,15 @@ Duplicate decisions must record:
 - Keep only `account_last4` when account metadata is needed.
 - Keep production posting and external reminders out of this flow.
 - Keep n8n responsible for Drive and Sheets side effects.
-- Keep Codex responsible for structured extraction only.
+- Keep OpenRouter model nodes responsible for structured extraction only.
 
 ## Manual Validation
 
-1. Put a sample job packet in `runtime/finance-document-intake/inbox/`.
-2. Run:
-
-```bash
-automation/scripts/codex-finance-worker.sh --once
-```
-
-3. Confirm output exists in `runtime/finance-document-intake/outputs/`.
-4. Validate the output JSON and any sample files.
-5. Confirm n8n can map the output into `Transactions`, `Documents`, `Review Queue`, and `Run Log`.
+1. Upload one sample finance document to `00_INBOX`.
+2. Run one manual execution of `google-drive-download-for-processing.json` in n8n.
+3. Confirm classifier output is valid strict JSON and mapped to sheet rows.
+4. Confirm expected rows are created in `Transactions`, `Documents`, and optionally `Review Queue`.
+5. Confirm `Run Log` captures counts and error reasons when applicable.
 
 ### One-file ingest smoke test
 
