@@ -31,6 +31,7 @@ Google Drive Holden Capital/Finance Automation/00_INBOX
 Workflow artifact for this variant:
 
 - [automation/workflows/google-drive-download-for-processing.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/google-drive-download-for-processing.json)
+- [automation/workflows/finance-automation-staging-pipeline.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/finance-automation-staging-pipeline.json)
 
 Design constraints:
 
@@ -77,6 +78,28 @@ Holden Capital/
 2. Create the `Holden Finance Ledger` spreadsheet with `Transactions`, `Documents`, `Review Queue`, and `Run Log` tabs.
 3. Record only placeholder IDs in workflow config nodes or environment-local config.
 4. Do not store credentials, live folder IDs tied to secrets workflows, or full account numbers in tracked files.
+
+### Financial Log Tab (Staging Pipeline)
+
+When using `finance-automation-staging-pipeline.json`, the `Financial Log` tab should include:
+
+- `timestamp_processed`
+- `date_document`
+- `document_type`
+- `vendor`
+- `currency`
+- `total_amount`
+- `event_summary`
+- `notes`
+- `confidence_score`
+- `review_status`
+- `routed_folder`
+- `drive_file_link`
+
+Column meaning split for the staging workflow:
+
+- `event_summary`: business event summary derived from extracted document text.
+- `notes`: extraction/validation context and operational routing notes.
 
 ## Job Lifecycle
 
