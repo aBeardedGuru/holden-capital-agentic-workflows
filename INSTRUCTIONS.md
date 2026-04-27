@@ -85,6 +85,19 @@ Prefer:
 - local CLI tools over browser-driven workflows
 - direct APIs only when CLI paths are insufficient
 
+### Local n8n API Auth
+
+For local n8n API access on this machine, load credentials from:
+
+- `/home/dank/.config/holden-capital/n8n.env`
+
+Expected keys:
+
+- `N8N_BASE_URL`
+- `N8N_API_KEY`
+
+Do not commit this file, its values, or derived tokens into the repo.
+
 ### Pull Requests
 
 PRs should include:

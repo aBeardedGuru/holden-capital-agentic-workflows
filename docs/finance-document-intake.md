@@ -21,17 +21,26 @@ Current live variant for simple personal-drive triage:
 
 ```text
 Google Drive Holden Capital/Finance Automation/00_INBOX
-  -> n8n lists all files in 00_INBOX
-  -> n8n downloads and extracts text
-  -> AI Intake Classifier node (prompt-driven) classifies each document type
-  -> only document_type=invoice rows are appended to the Expenses sheet
-  -> files are moved to 10_DONE_INVOICES, 20_DONE_BANK_STATEMENTS, 30_DONE_OTHER, 90_REVIEW, or 99_ERROR
+  -> n8n validates required config IDs before side effects
+  -> n8n lists a bounded file batch from 00_INBOX (maxFilesPerRun)
+  -> n8n downloads full file content
+  -> AI Intake Classifier receives bounded payload (text + metadata + routing config)
+  -> AI prompt performs all parsing, normalization, routing, and invoice_id extraction
+  -> parser validates strict AI JSON contract and required keys
+  -> mandatory step chain runs in order: Rename File -> Append Financial Log -> Move To Terminal Folder
+  -> verification gates run after each mandatory step; any failure stops the workflow
+  -> final dataset JSON includes invoiceId/invoice_id for sheet output
 ```
 
 Workflow artifact for this variant:
 
 - [automation/workflows/google-drive-download-for-processing.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/google-drive-download-for-processing.json)
 - [automation/workflows/finance-automation-staging-pipeline.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/finance-automation-staging-pipeline.json)
+- [automation/workflows/finance-invoices.blueprint.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/finance-invoices.blueprint.json)
+
+For item-by-item terminal routing in n8n, avoid `$item(0)` references in move expressions. Use linked item access so each file routes with its own `fileId` and `targetFolderId`.
+
+Current invoice log contract includes `invoice_id` (from extracted invoice number/ID when present).
 
 Design constraints:
 
@@ -40,6 +49,14 @@ Design constraints:
 - OpenRouter-backed model inference runs in n8n using model-specific credentials.
 - Source documents are never deleted.
 - Runtime operational data stays under `runtime/` and is never committed.
+
+Operational guardrails in the current variant:
+
+- `Schedule Trigger` runs every 5 minutes.
+- `maxFilesPerRun` limits per-run intake size.
+- `maxInlineDocumentBase64Chars` caps inline AI payload size.
+- `confidenceReviewThreshold` routes low-confidence results to review.
+- payload truncation forces conservative review routing when extraction certainty is low.
 
 ## Required Google Integrations
 
@@ -76,8 +93,16 @@ Holden Capital/
 ```
 
 2. Create the `Holden Finance Ledger` spreadsheet with `Transactions`, `Documents`, `Review Queue`, and `Run Log` tabs.
-3. Record only placeholder IDs in workflow config nodes or environment-local config.
-4. Do not store credentials, live folder IDs tied to secrets workflows, or full account numbers in tracked files.
+3. Add AI learning tabs in the same spreadsheet:
+
+```text
+Balance Sheet
+AI_Learning_Log
+AI_Validation_Queue
+AI_Validated_Examples
+```
+4. Record only placeholder IDs in workflow config nodes or environment-local config.
+5. Do not store credentials, live folder IDs tied to secrets workflows, or full account numbers in tracked files.
 
 ### Financial Log Tab (Staging Pipeline)
 
