@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://holdencapital.io/schemas/council-role-review.schema.json",
+  "title": "Council Role Review",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "role",
+    "verdict",
+    "confidence",
+    "summary",
+    "top_risks",
+    "key_assumptions",
+    "missing_information",
+    "recommended_next_steps",
+    "challenge_to_user"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "discipline",
+        "wealth",
+        "strategy",
+        "wisdom"
+      ]
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "support",
+        "lean_support",
+        "mixed",
+        "lean_reject",
+        "reject",
+        "needs_clarification"
+      ]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "top_risks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "key_assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "missing_information": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "recommended_next_steps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "challenge_to_user": {
+      "type": "string"
+    }
+  }
+}

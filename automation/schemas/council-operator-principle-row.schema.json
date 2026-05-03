@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://holdencapital.io/schemas/council-operator-principle-row.schema.json",
+  "title": "Council Operator Principle Row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "principle_id",
+    "role",
+    "title",
+    "statement",
+    "why_it_exists",
+    "applies_to",
+    "priority",
+    "approved_for_retrieval"
+  ],
+  "properties": {
+    "principle_id": {"type": "string", "minLength": 1},
+    "role": {"type": "string", "enum": ["discipline", "wealth", "strategy", "wisdom", "shared"]},
+    "title": {"type": "string", "minLength": 1},
+    "statement": {"type": "string", "minLength": 1},
+    "why_it_exists": {"type": "string", "minLength": 1},
+    "applies_to": {"type": "string", "minLength": 1},
+    "priority": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+    "approved_for_retrieval": {"type": "boolean"}
+  }
+}

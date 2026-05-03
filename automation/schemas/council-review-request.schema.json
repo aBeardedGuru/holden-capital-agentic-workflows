@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://holdencapital.io/schemas/council-review-request.schema.json",
+  "title": "Council Review Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "decision_type",
+    "question",
+    "context",
+    "options_considered",
+    "preferred_option",
+    "time_horizon",
+    "capital_at_risk",
+    "resource_commitment",
+    "upside_case",
+    "base_case",
+    "downside_case",
+    "known_risks",
+    "unknowns",
+    "constraints",
+    "values_or_principles",
+    "requested_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision_type": {
+      "type": "string",
+      "enum": [
+        "deal_review",
+        "business_decision",
+        "personal_decision"
+      ]
+    },
+    "question": {
+      "type": "string",
+      "minLength": 1
+    },
+    "context": {
+      "type": "string"
+    },
+    "options_considered": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "preferred_option": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "time_horizon": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "capital_at_risk": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "resource_commitment": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "upside_case": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "base_case": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "downside_case": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "known_risks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "values_or_principles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requested_at": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

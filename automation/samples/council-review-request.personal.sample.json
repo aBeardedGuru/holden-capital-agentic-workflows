@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "request_id": "council-2026-05-03-personal-001",
+  "decision_type": "personal_decision",
+  "question": "Should I commit to a weekly founder mastermind for the next year?",
+  "context": "The group seems high-quality and could be energizing, but my calendar is already tight and I am trying to protect deep work time.",
+  "options_considered": [
+    "Commit to the weekly mastermind for one year",
+    "Join for a shorter trial period",
+    "Decline for now"
+  ],
+  "preferred_option": "Commit to the weekly mastermind for one year",
+  "time_horizon": "12 months",
+  "capital_at_risk": 12000,
+  "resource_commitment": "Three hours weekly including travel and preparation",
+  "upside_case": "The group sharpens decision quality, relationships, and accountability.",
+  "base_case": "The group is useful but only marginally changes outcomes.",
+  "downside_case": "The commitment fragments time, adds pressure, and displaces more valuable priorities.",
+  "known_risks": [
+    "Schedule is already crowded",
+    "I tend to overcommit to future obligations"
+  ],
+  "unknowns": [
+    "How honest and high-signal the group actually is",
+    "Whether the recurring cadence will still feel valuable after a month"
+  ],
+  "constraints": [
+    "Need to preserve time for family and deep work",
+    "Do not want another commitment that becomes obligation theater"
+  ],
+  "values_or_principles": [
+    "Protect attention as a scarce resource",
+    "Choose relationships and commitments deliberately"
+  ],
+  "requested_at": "2026-05-03T17:10:00Z"
+}

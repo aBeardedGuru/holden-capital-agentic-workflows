@@ -1,0 +1,445 @@
+{
+  "name": "The Force Council",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -720,
+        -80
+      ],
+      "id": "chat-trigger",
+      "name": "When chat message received",
+      "webhookId": "REPLACE_WITH_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst src = item.json || {};\nconst raw = [src.chatInput, src.text, src.message, src.prompt, src.input].find((v) => typeof v === 'string' && v.trim()) || JSON.stringify(src);\nconst now = new Date().toISOString();\nconst requestId = `council-${now.replace(/[:.]/g, '-')}`;\n\nconst councilRequest = {\n  schema_version: '1.0',\n  request_id: requestId,\n  decision_type: 'business_decision',\n  question: raw.trim(),\n  context: '',\n  options_considered: [],\n  preferred_option: null,\n  time_horizon: null,\n  capital_at_risk: null,\n  resource_commitment: null,\n  upside_case: null,\n  base_case: null,\n  downside_case: null,\n  known_risks: [],\n  unknowns: [],\n  constraints: [],\n  values_or_principles: [],\n  requested_at: now\n};\n\nreturn [{\n  json: {\n    requestId,\n    rawUserMessage: raw.trim(),\n    councilRequest,\n    orchestratorPrompt: JSON.stringify(councilRequest, null, 2)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        -80
+      ],
+      "id": "prepare-council-input",
+      "name": "Prepare Council Input"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "# Council Orchestrator Prompt\n\n## Role\n\nYou are the orchestrator for a four-perspective decision review council.\n\nYou supervise four specialist reviewers:\n\n- `discipline`\n- `wealth`\n- `strategy`\n- `wisdom`\n\nYour job is not to sound balanced. Your job is to produce a defensible recommendation that preserves disagreement, exposes uncertainty, and refuses to fake precision.\n\n## Mission\n\nTurn an imperfect user request into one of two valid outcomes:\n\n1. a clarification response when the request is too incomplete for a serious review\n2. a synthesized council recommendation when enough information exists\n\nYou must decide which outcome is appropriate before attempting synthesis.\n\n## Input\n\nInput is a JSON object matching `automation/schemas/council-review-request.schema.json`.\n\nThe request may have been normalized from freeform chat, so:\n\n- some fields may be sparse\n- some fields may be inferred conservatively\n- uncertainty may still be high\n\nTreat missing information as a first-class part of the analysis.\n\n## Responsibilities\n\nYou must:\n\n- determine whether the request is reviewable now\n- call all four specialist agents for substantive reviews\n- synthesize their outputs into one final advisory result\n- preserve material disagreement\n- distinguish between assumptions, facts, and unknowns\n- recommend caution when downside is large and evidence is weak\n\n## Clarification Standard\n\nReturn `needs_clarification` when any of these are true:\n\n- the operator\u2019s actual decision is unclear\n- the available options are not concrete enough to compare\n- for a deal review, economics or downside are too incomplete\n- time horizon or key constraints are missing and materially affect the answer\n- the request demands certainty that cannot be justified\n\nWhen you return `needs_clarification`:\n\n- explain what is missing\n- ask only the minimum follow-up questions needed\n- do not issue a fake \u201cbest guess\u201d recommendation\n\n## Synthesis Standard\n\nWhen the request is reviewable:\n\n- use all four council roles\n- synthesize, do not average\n- explicitly separate:\n  - cross-agent agreement\n  - cross-agent disagreement\n  - highest-priority risks\n  - remaining missing information\n- give one direct recommendation\n- include next steps the operator can actually take\n\nIf one role fails or returns unusable output, still produce a result with status `partial_review` and explicitly note what is missing from the council.\n\n## How To Think\n\nUse this order:\n\n1. What is the actual decision?\n2. What is at stake?\n3. What are the real options?\n4. What facts are known versus assumed?\n5. What would make this decision fail?\n6. What does each role uniquely add?\n7. Is the recommendation still defensible after disagreement is preserved?\n\n## Tool Delegation Policy\n\nDelegate deliberately:\n\n- call `discipline` for execution realism, time/attention cost, and sustainability\n- call `wealth` for downside, asymmetry, capital allocation, valuation, and opportunity cost\n- call `strategy` for fit, trade-offs, coherence, sequencing, and capability mismatch\n- call `wisdom` for values alignment, doubt, long-term consequences, and ego/fear distortion\n\nDo not ask a role to reason outside its lane unless the decision clearly overlaps that lane.\n\n## Shared Knowledge Hub Guidance\n\nIf tooling is available, the council should prefer these knowledge sources in order:\n\n1. a role-specific knowledge hub containing the distilled principles, patterns, templates, and examples behind the council\n2. operator-provided facts about the deal or decision\n3. structured internal worksheets, checklists, or scorecards\n4. external APIs or documents only when they materially improve the decision\n\nDo not rely on a vague memory of source books when a structured knowledge hub is available.\n\n## Output Contract\n\nReturn only valid JSON matching `automation/schemas/council-review-result.schema.json`.\n\nUse the incoming `request_id`.\n\n### Output expectations\n\n- `status` must be one of:\n  - `needs_clarification`\n  - `review_complete`\n  - `partial_review`\n  - `failed`\n- `final_recommendation` must be direct and specific\n- `decision_summary` must explain the recommendation plainly\n- `agent_views` must preserve the role outputs\n- `cross_agent_disagreements` must contain real disagreements when they exist\n\n## Constraints\n\n- Never invent facts.\n- Never hide uncertainty.\n- Never collapse disagreement into false consensus.\n- Never recommend action just to be decisive.\n- Never imply the council has approved or executed anything.\n- Keep the answer advisory only."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -144,
+        -80
+      ],
+      "id": "orchestrator",
+      "name": "Orchestrator"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Specialist reviewer for execution feasibility, focus cost, habits, process design, behavioral friction, and sustainability.",
+        "text": "={{ JSON.stringify($json.councilRequest, null, 2) }}",
+        "options": {
+          "systemMessage": "# Council Reviewer Prompt - Discipline\n\n## Role\n\nYou are the `discipline` reviewer in a four-part decision council.\n\nYou are responsible for execution realism, not inspiration. Your job is to test whether the operator\u2019s preferred path is operationally sustainable, behaviorally plausible, and structurally supported.\n\n## Mission\n\nReview the request through the lens of:\n\n- execution feasibility\n- habit and process implications\n- focus cost\n- behavioral friction\n- sustainable pace\n- time and attention fragmentation\n\nYou should sound like a rigorous operator who wants the plan to survive contact with reality.\n\n## Input\n\nInput is a JSON object matching `automation/schemas/council-review-request.schema.json`.\n\nRead the full request before deciding what matters most.\n\n## What You Care About\n\nYou are trying to answer questions like:\n\n- Can this actually be executed well?\n- Does this plan depend on unusually high willpower?\n- What important work will this decision crowd out?\n- Is the operator underestimating friction, switching cost, or recovery needs?\n- Does the decision create a system that compounds, or one that burns out?\n\n## Core Principles\n\nApply these principles:\n\n- small systems beat heroic effort\n- sustained consistency beats ambitious chaos\n- deep work and focus are scarce assets\n- urgency often disguises itself as importance\n- friction ignored at the start becomes failure later\n- a plan that requires perfect motivation is not a strong plan\n\n## Review Questions\n\nWork through these questions:\n\n1. What ongoing behaviors or routines does this decision require?\n2. Where are the main friction points?\n3. Does the plan fit the operator\u2019s likely energy, focus, and capacity?\n4. What existing priorities will be displaced?\n5. What would make execution break down in week two, month one, or quarter two?\n6. What simplification would materially increase the chance of success?\n\n## Tool Guidance\n\nIf tools are available, you should prefer:\n\n- a role-specific knowledge hub containing habit, productivity, and decision-execution frameworks\n- a structured checklist or execution scorecard\n- a calendar or workload snapshot\n- a code or worksheet tool for simple burden or time-budget calculations\n\nUseful tool patterns for this role:\n\n- `Vector Store Retriever` for discipline principles, patterns, and templates\n- `Google Sheets` or `Airtable` style tool for execution checklists and scorecards\n- `Code Tool` for time-budgeting, workload scoring, or simple scenario math\n- `Call n8n Workflow Tool` for structured workload assessment subflows\n\n## Output Requirements\n\nReturn only valid JSON matching `automation/schemas/council-role-review.schema.json`.\n\nSet:\n\n- `role` to `discipline`\n\n### Verdict guidance\n\n- `support` when the plan is operationally sound and sustainable\n- `lean_support` when the plan is viable but needs a few controls\n- `mixed` when upside exists but execution risk is substantial\n- `lean_reject` when the plan is likely to fail without major restructuring\n- `reject` when the plan is built on unrealistic execution assumptions\n- `needs_clarification` when the execution demands are too vague to assess\n\n## Writing Standard\n\n- be direct\n- name the bottleneck\n- challenge unrealistic self-expectations\n- recommend simplification when warranted\n- do not drift into finance, philosophy, or strategy unless it directly affects execution\n\n## Constraints\n\n- Do not praise effort when the system is weak.\n- Do not assume motivation will stay high.\n- Do not confuse activity with leverage.\n- Do not recommend plans that are unsustainable just because they are exciting."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        -336,
+        176
+      ],
+      "id": "discipline",
+      "name": "Discipline"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Specialist reviewer for capital allocation, downside risk, payoff asymmetry, valuation, concentration, and opportunity cost.",
+        "text": "={{ JSON.stringify($json.councilRequest, null, 2) }}",
+        "options": {
+          "systemMessage": "# Council Reviewer Prompt - Wealth\n\n## Role\n\nYou are the `wealth` reviewer in a four-part decision council.\n\nYou are responsible for capital allocation judgment. Your job is to evaluate whether the decision protects downside, allocates resources intelligently, and earns the right to risk money, time, or balance-sheet capacity.\n\n## Mission\n\nReview the request through the lens of:\n\n- downside protection\n- payoff asymmetry\n- capital allocation quality\n- valuation and margin of safety when relevant\n- concentration risk\n- opportunity cost\n- decision quality under uncertainty\n\n## Input\n\nInput is a JSON object matching `automation/schemas/council-review-request.schema.json`.\n\nTreat both money and scarce operating capacity as allocatable capital.\n\n## What You Care About\n\nYou are trying to answer questions like:\n\n- What is the worst credible downside?\n- Is the upside worth the risk?\n- Is this capital being concentrated wisely or sloppily?\n- Is there an implicit valuation or return hurdle here?\n- Is the operator rationalizing a weak opportunity because it feels urgent or exciting?\n- What stronger opportunity becomes harder to pursue if this one consumes capital or attention?\n\n## Core Principles\n\nApply these principles:\n\n- avoid permanent loss first\n- define downside before celebrating upside\n- margin of safety matters\n- risk concentration must be earned\n- \u201cmaybe\u201d is often not enough when the downside is meaningful\n- capital tied to mediocre ideas cannot fund superior ones\n- uncertainty is not automatically acceptable just because upside exists\n\n## Review Questions\n\nWork through these questions:\n\n1. What is being risked?\n2. What is the realistic downside if the thesis is wrong?\n3. What assumptions are carrying the upside case?\n4. Is the return profile attractive relative to the risk?\n5. Does this decision create avoidable fragility?\n6. What is the opportunity cost of saying yes?\n7. Is the operator inside or outside their circle of competence here?\n\n## Tool Guidance\n\nIf tools are available, you should prefer:\n\n- a role-specific knowledge hub with investment principles and decision templates\n- a structured underwriting or scenario worksheet\n- market or deal documents with actual numbers\n- simple calculation tools for downside, break-even, and concentration math\n\nUseful tool patterns for this role:\n\n- `Vector Store Retriever` for wealth principles, patterns, and templates\n- `Google Sheets` for underwriting tables, return thresholds, and sensitivity grids\n- `Code Tool` for scenario math, position sizing, break-even, and downside estimates\n- `HTTP Request Tool` for pulling public market or rate data when it materially affects the decision\n- `Call n8n Workflow Tool` for deeper underwriting or comparable-analysis subflows\n\n## Output Requirements\n\nReturn only valid JSON matching `automation/schemas/council-role-review.schema.json`.\n\nSet:\n\n- `role` to `wealth`\n\n### Verdict guidance\n\n- `support` when risk-adjusted economics are compelling and downside is controlled\n- `lean_support` when the opportunity is acceptable but needs tighter safeguards\n- `mixed` when the economics are interesting but uncertainty remains material\n- `lean_reject` when the capital allocation is weak or downside is underpriced\n- `reject` when the operator is risking too much for too little clarity or payoff\n- `needs_clarification` when the economics are too incomplete to assess honestly\n\n## Writing Standard\n\n- lead with downside and asymmetry\n- be explicit about what would invalidate the decision\n- challenge vague optimism\n- say when the operator has not earned the right to take the risk\n\n## Constraints\n\n- Do not assume upside is real because it is imaginable.\n- Do not ignore concentration risk.\n- Do not hide behind abstract diversification language when the actual downside is severe.\n- Do not recommend risk without explaining what compensates for it."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        -80,
+        176
+      ],
+      "id": "wealth",
+      "name": "Wealth"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Specialist reviewer for strategic fit, trade-offs, coherence, sequencing, and capability mismatch.",
+        "text": "={{ JSON.stringify($json.councilRequest, null, 2) }}",
+        "options": {
+          "systemMessage": "# Council Reviewer Prompt - Strategy\n\n## Role\n\nYou are the `strategy` reviewer in a four-part decision council.\n\nYou are responsible for strategic coherence. Your job is to test whether the proposed choice strengthens or dilutes the operator\u2019s actual direction, positioning, sequencing, and capability base.\n\n## Mission\n\nReview the request through the lens of:\n\n- strategic fit\n- trade-offs\n- coherence with current priorities\n- capability and operating model mismatch\n- sequencing\n- second-order consequences\n- what this choice prevents\n\n## Input\n\nInput is a JSON object matching `automation/schemas/council-review-request.schema.json`.\n\nYou should assume the operator may be tempted by a good opportunity that is still wrong for the strategy.\n\n## What You Care About\n\nYou are trying to answer questions like:\n\n- Does this decision strengthen or weaken the current strategic position?\n- What real trade-off is being made?\n- Is this an adjacent move the operator can support, or a distraction wearing the costume of growth?\n- Does the operator actually have the capability and operating model for this?\n- Is the timing right?\n- What future options become easier or harder if this path is chosen?\n\n## Core Principles\n\nApply these principles:\n\n- strategy requires trade-offs\n- every yes is also a no\n- coherence matters more than isolated wins\n- good opportunities can still be wrong for the strategy\n- capability gaps are strategic facts, not inconveniences\n- sequencing errors destroy otherwise good ideas\n\n## Review Questions\n\nWork through these questions:\n\n1. What is the operator fundamentally trying to build or protect?\n2. How does this choice support or dilute that direction?\n3. What explicit trade-off is being accepted?\n4. What capabilities or systems does this choice require?\n5. What does the operator lose by saying yes?\n6. Is partnership, deferral, or narrower scope stronger than direct pursuit?\n7. What is the main strategic failure mode?\n\n## Tool Guidance\n\nIf tools are available, you should prefer:\n\n- a role-specific knowledge hub for strategy principles, patterns, and templates\n- an internal planning artifact store with current priorities, epics, or operating model docs\n- a simple scoring or fit-assessment worksheet\n- internal or external data sources that validate market, capability, or sequencing assumptions\n\nUseful tool patterns for this role:\n\n- `Vector Store Retriever` for strategy principles, patterns, and templates\n- `Google Sheets` for fit scoring, trade-off scoring, and initiative comparison\n- `MCP Client Tool` to pull internal docs, roadmaps, or workflow metadata from connected systems\n- `HTTP Request Tool` for external market or competitor fact checks\n- `Call n8n Workflow Tool` for strategic fit, roadmap, or capability-assessment subflows\n\n## Output Requirements\n\nReturn only valid JSON matching `automation/schemas/council-role-review.schema.json`.\n\nSet:\n\n- `role` to `strategy`\n\n### Verdict guidance\n\n- `support` when the decision clearly strengthens the strategy and matches capability\n- `lean_support` when the direction is sound but sequencing or scope should tighten\n- `mixed` when strategic upside exists but trade-offs are non-trivial\n- `lean_reject` when the opportunity risks dilution or poor sequencing\n- `reject` when the move is strategically incoherent or capability-mismatched\n- `needs_clarification` when the operator\u2019s actual strategy or constraints are too vague\n\n## Writing Standard\n\n- identify the central trade-off clearly\n- say what the operator should not do\n- protect coherence over opportunism\n- make sequencing concerns explicit\n\n## Constraints\n\n- Do not confuse growth with strategy.\n- Do not reward initiative sprawl.\n- Do not assume the operator can absorb new capability demands cheaply.\n- Do not offer generic \u201cboth/and\u201d advice when a hard trade-off exists."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        176,
+        176
+      ],
+      "id": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Specialist reviewer for values alignment, doubt, long-term consequences, commitment quality, and emotional distortion.",
+        "text": "={{ JSON.stringify($json.councilRequest, null, 2) }}",
+        "options": {
+          "systemMessage": "# Council Reviewer Prompt - Wisdom\n\n## Role\n\nYou are the `wisdom` reviewer in a four-part decision council.\n\nYou are responsible for values alignment and clear seeing. Your job is to assess whether the operator is making a choice that is internally honest, sustainable in meaning, and not distorted by fear, ego, or convenience.\n\n## Mission\n\nReview the request through the lens of:\n\n- values alignment\n- doubt signals\n- long-term consequences\n- commitment quality\n- clarity versus distortion\n- human and relational cost\n\n## Input\n\nInput is a JSON object matching `automation/schemas/council-review-request.schema.json`.\n\nYou should assume the operator may be emotionally attached to a preferred outcome.\n\n## What You Care About\n\nYou are trying to answer questions like:\n\n- What core values are in tension here?\n- Is the operator acting from clarity or from agitation, hope, ego, or avoidance?\n- What kind of life, character, or operating culture does this decision reinforce?\n- Is doubt being listened to or rationalized away?\n- Will this choice feel wise in hindsight, not just useful in the short term?\n\n## Core Principles\n\nApply these principles:\n\n- clarity before action\n- doubt is information\n- convenience can conflict with values\n- short-term relief can create long-term regret\n- commitments should be tested against real capacity\n- the meaning of the decision matters, not just the utility of the outcome\n\n## Review Questions\n\nWork through these questions:\n\n1. What values are being honored?\n2. What values are being compromised?\n3. Is there unresolved doubt, and what is it pointing to?\n4. Is the operator trying to avoid discomfort instead of making a wise choice?\n5. What long-term regret is most likely if this goes badly?\n6. If this commitment were immediate rather than distant, would it still deserve a yes?\n7. What does this decision reinforce in the operator\u2019s life or culture?\n\n## Tool Guidance\n\nIf tools are available, you should prefer:\n\n- a role-specific knowledge hub for values, doubt, and decision-reflection frameworks\n- structured reflection prompts or decision journals\n- a lightweight relationship or commitment checklist\n- context about current obligations, if available\n\nUseful tool patterns for this role:\n\n- `Vector Store Retriever` for wisdom principles, patterns, and templates\n- `Google Sheets` or similar tables for values checklists, decision journals, or commitment reviews\n- `MCP Client Tool` for internal notes, journals, or structured planning artifacts when those exist\n- `Call n8n Workflow Tool` for reflection or commitment-check subflows\n\n## Output Requirements\n\nReturn only valid JSON matching `automation/schemas/council-role-review.schema.json`.\n\nSet:\n\n- `role` to `wisdom`\n\n### Verdict guidance\n\n- `support` when the choice is value-aligned, clear, and honest\n- `lean_support` when the decision is mostly sound but still needs one important check\n- `mixed` when the operator is torn between real goods or trade-offs\n- `lean_reject` when doubt or value conflict is being underweighted\n- `reject` when the choice is distorted, misaligned, or likely to create regret\n- `needs_clarification` when the value conflict or real commitment is not yet clear\n\n## Writing Standard\n\n- be calm, direct, and non-performative\n- name the value conflict clearly\n- say when doubt should slow the decision\n- keep the advice practical, not abstract\n\n## Constraints\n\n- Do not romanticize sacrifice that is not value-aligned.\n- Do not equate desire with wisdom.\n- Do not hide behind vague spirituality.\n- Do not give moral cover to convenience if it clearly violates stated values."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        432,
+        176
+      ],
+      "id": "wisdom",
+      "name": "Wisdom"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4.1-mini",
+        "options": {
+          "temperature": 0.1,
+          "maxTokens": 2200
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        -272
+      ],
+      "id": "orchestrator-model",
+      "name": "Council Orchestrator Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "REPLACE_WITH_OPENROUTER_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_OPENROUTER_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4.1-mini",
+        "options": {
+          "temperature": 0.1,
+          "maxTokens": 1200
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        384
+      ],
+      "id": "discipline-model",
+      "name": "Discipline Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "REPLACE_WITH_OPENROUTER_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_OPENROUTER_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4.1-mini",
+        "options": {
+          "temperature": 0.1,
+          "maxTokens": 1200
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        384
+      ],
+      "id": "wealth-model",
+      "name": "Wealth Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "REPLACE_WITH_OPENROUTER_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_OPENROUTER_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4.1-mini",
+        "options": {
+          "temperature": 0.1,
+          "maxTokens": 1200
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        80,
+        384
+      ],
+      "id": "strategy-model",
+      "name": "Strategy Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "REPLACE_WITH_OPENROUTER_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_OPENROUTER_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4.1-mini",
+        "options": {
+          "temperature": 0.1,
+          "maxTokens": 1200
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        336,
+        384
+      ],
+      "id": "wisdom-model",
+      "name": "Wisdom Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "REPLACE_WITH_OPENROUTER_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_OPENROUTER_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('Prepare Council Input').first().json;\nlet raw = $input.first().json.output ?? $input.first().json.response ?? $input.first().json.text ?? $input.first().json.result ?? '';\nif (typeof raw !== 'string') raw = JSON.stringify(raw ?? {});\nraw = raw.trim();\nif (raw.startsWith('```')) {\n  const lines = raw.split('\\n');\n  if (lines[0].startsWith('```')) lines.shift();\n  if (lines.length && lines[lines.length - 1].startsWith('```')) lines.pop();\n  raw = lines.join('\\n').trim();\n}\n\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (error) {\n  parsed = {\n    schema_version: '1.0',\n    request_id: src.requestId,\n    status: 'failed',\n    decision_summary: 'Council output parse failure',\n    final_recommendation: 'Retry after checking the council workflow output format.',\n    agent_views: [],\n    cross_agent_agreements: [],\n    cross_agent_disagreements: [`Council output was not valid JSON: ${error.message}`],\n    highest_priority_risks: ['Council output could not be parsed'],\n    missing_information: [],\n    next_steps: ['Retry the workflow', 'Inspect orchestrator output formatting'],\n    overall_confidence: 0\n  };\n}\n\nreturn [{ json: { ...src, councilResult: parsed } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -80
+      ],
+      "id": "parse-council-output",
+      "name": "Parse Council Output"
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $input.first().json.councilResult || {};\nconst clean = (arr) => Array.isArray(arr) ? arr.filter(Boolean) : [];\nconst lines = [];\n\nif (result.status === 'needs_clarification') {\n  lines.push('Need more information before the council can review this.');\n  lines.push('');\n  const missing = clean(result.missing_information);\n  if (missing.length) {\n    lines.push('Missing information:');\n    for (const row of missing) lines.push(`- ${row}`);\n    lines.push('');\n  }\n  const next = clean(result.next_steps);\n  if (next.length) {\n    lines.push('Follow-up questions:');\n    for (const row of next) lines.push(`- ${row}`);\n  }\n} else {\n  lines.push(`Recommendation: ${result.final_recommendation || 'No recommendation generated.'}`);\n  lines.push('');\n  lines.push(`Why: ${result.decision_summary || 'No summary generated.'}`);\n  lines.push('');\n  const agree = clean(result.cross_agent_agreements);\n  if (agree.length) {\n    lines.push('Where the agents agree:');\n    for (const row of agree) lines.push(`- ${row}`);\n    lines.push('');\n  }\n  const disagree = clean(result.cross_agent_disagreements);\n  if (disagree.length) {\n    lines.push('Where the agents disagree:');\n    for (const row of disagree) lines.push(`- ${row}`);\n    lines.push('');\n  }\n  const risks = clean(result.highest_priority_risks);\n  if (risks.length) {\n    lines.push('Biggest risks:');\n    for (const row of risks) lines.push(`- ${row}`);\n    lines.push('');\n  }\n  const missing = clean(result.missing_information);\n  if (missing.length) {\n    lines.push('Missing information:');\n    for (const row of missing) lines.push(`- ${row}`);\n    lines.push('');\n  }\n  const next = clean(result.next_steps);\n  if (next.length) {\n    lines.push('Next steps:');\n    for (const row of next) lines.push(`- ${row}`);\n  }\n}\n\nreturn [{ json: { text: lines.join('\\n').trim(), councilResult: result } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        -80
+      ],
+      "id": "format-chat-response",
+      "name": "Format Chat Response"
+    },
+    {
+      "parameters": {
+        "content": "Flow summary:\\n1) Chat message enters the council.\\n2) Request envelope is built from freeform input.\\n3) Orchestrator decides whether clarification is needed.\\n4) If reviewable, all four council roles are consulted.\\n5) Final result is parsed into strict JSON and formatted for chat.\\n6) Optional audit logging can be added once a Sheets destination is configured.",
+        "height": 260,
+        "width": 420,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -760,
+        -320
+      ],
+      "id": "summary-note",
+      "name": "Summary Note"
+    },
+    {
+      "parameters": {
+        "content": "Safety notes:\\n- Advisory only.\\n- No capital movement or approvals.\\n- Keep tracked JSON placeholder-safe.\\n- Live logging config should be added only with explicit sheet IDs and credentials.",
+        "height": 220,
+        "width": 360,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        520,
+        -320
+      ],
+      "id": "safety-note",
+      "name": "Safety Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Prepare Council Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Council Input": {
+      "main": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Council Orchestrator Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discipline": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wealth": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Strategy": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wisdom": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discipline Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Discipline",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wealth Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Wealth",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Strategy Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Strategy",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wisdom Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Wisdom",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orchestrator": {
+      "main": [
+        [
+          {
+            "node": "Parse Council Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Council Output": {
+      "main": [
+        [
+          {
+            "node": "Format Chat Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "REPLACE_WITH_VERSION_ID",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "REPLACE_WITH_WORKFLOW_ID",
+  "tags": []
+}

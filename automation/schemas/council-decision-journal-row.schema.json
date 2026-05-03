@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://holdencapital.io/schemas/council-decision-journal-row.schema.json",
+  "title": "Council Decision Journal Row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entry_id",
+    "decision_date",
+    "decision_type",
+    "title",
+    "summary",
+    "preferred_option",
+    "other_options",
+    "capital_at_risk",
+    "time_horizon",
+    "known_risks",
+    "unknowns",
+    "actual_outcome",
+    "lesson",
+    "tags",
+    "approved_for_retrieval"
+  ],
+  "properties": {
+    "entry_id": {"type": "string", "minLength": 1},
+    "decision_date": {"type": "string", "minLength": 1},
+    "decision_type": {"type": "string", "enum": ["deal_review", "business_decision", "personal_decision"]},
+    "title": {"type": "string", "minLength": 1},
+    "summary": {"type": "string", "minLength": 1},
+    "preferred_option": {"type": ["string", "null"]},
+    "other_options": {"type": "string"},
+    "capital_at_risk": {"type": ["number", "null"]},
+    "time_horizon": {"type": ["string", "null"]},
+    "known_risks": {"type": "string"},
+    "unknowns": {"type": "string"},
+    "actual_outcome": {"type": ["string", "null"]},
+    "lesson": {"type": ["string", "null"]},
+    "tags": {"type": "string"},
+    "approved_for_retrieval": {"type": "boolean"}
+  }
+}

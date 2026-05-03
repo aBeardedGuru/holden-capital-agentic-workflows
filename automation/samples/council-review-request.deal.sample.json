@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "request_id": "council-2026-05-03-deal-001",
+  "decision_type": "deal_review",
+  "question": "Should I submit a non-refundable deposit to control this 12-unit acquisition opportunity?",
+  "context": "The deal is a 12-unit multifamily property in a familiar market. The seller wants a quick close. I believe light operational improvements can raise NOI over 18 months.",
+  "options_considered": [
+    "Submit the deposit and move to contract now",
+    "Renegotiate for more diligence time before deposit goes hard",
+    "Pass on the opportunity"
+  ],
+  "preferred_option": "Submit the deposit and move to contract now",
+  "time_horizon": "18 months",
+  "capital_at_risk": 85000,
+  "resource_commitment": "Operator time plus bridge financing effort over the next 90 days",
+  "upside_case": "Acquire at a discount, improve operations, and refinance after NOI growth.",
+  "base_case": "Acquire at a fair price with modest NOI improvement and average leasing execution.",
+  "downside_case": "Unexpected deferred maintenance and weaker rent growth compress returns and trap capital.",
+  "known_risks": [
+    "Deferred maintenance scope is not fully confirmed",
+    "Insurance costs may rise at renewal",
+    "The deposit becomes non-refundable quickly"
+  ],
+  "unknowns": [
+    "Final roof and plumbing condition",
+    "True tenant delinquency trend",
+    "Exit cap assumptions in 18 to 24 months"
+  ],
+  "constraints": [
+    "Need to preserve enough liquidity for existing portfolio operations",
+    "Cannot materially increase personal guarantee exposure"
+  ],
+  "values_or_principles": [
+    "Protect downside before chasing upside",
+    "Prefer disciplined, repeatable acquisitions over forced growth"
+  ],
+  "requested_at": "2026-05-03T17:00:00Z"
+}

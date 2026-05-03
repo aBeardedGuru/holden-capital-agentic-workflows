@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://holdencapital.io/schemas/council-review-result.schema.json",
+  "title": "Council Review Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "status",
+    "decision_summary",
+    "final_recommendation",
+    "agent_views",
+    "cross_agent_agreements",
+    "cross_agent_disagreements",
+    "highest_priority_risks",
+    "missing_information",
+    "next_steps",
+    "overall_confidence"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "needs_clarification",
+        "review_complete",
+        "partial_review",
+        "failed"
+      ]
+    },
+    "decision_summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "final_recommendation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agent_views": {
+      "type": "array",
+      "items": {
+        "$ref": "https://holdencapital.io/schemas/council-role-review.schema.json"
+      }
+    },
+    "cross_agent_agreements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cross_agent_disagreements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "highest_priority_risks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "missing_information": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_steps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "overall_confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  }
+}
