@@ -1,6 +1,6 @@
 # Epic 3: Invoice Collection Queue
 
-Enable the operator to classify invoices, identify overdue or mismatched items, and prepare approved follow-up actions without sending unapproved reminders.
+Enable the operator to classify invoices, triage high-priority billing communications, identify overdue or mismatched items, and prepare approved follow-up actions without sending unapproved reminders.
 
 ## Story 3.1: Define Invoice Source Record Contract
 
@@ -103,3 +103,26 @@ So that counterparties are not spammed when production sending is later enabled.
 **Given** a reminder draft is suppressed
 **When** audit logging occurs
 **Then** the suppression reason is visible in the invoice audit record.
+
+## Story 3.6: Triage Billing Communication Priority And Internal Alerts
+
+As a Holden Capital operator,
+I want billing and deposit-related messages triaged by priority,
+So that urgent finance items are surfaced immediately without relying on manual inbox scanning.
+
+**Acceptance Criteria:**
+
+**Given** a billing-related inbound communication is detected
+**When** the triage flow runs
+**Then** it classifies the communication as `high_priority_finance`, `finance_routine`, or `non_finance`
+**And** records the confidence and reason for that classification.
+
+**Given** a message is classified as `high_priority_finance`
+**When** triage completes
+**Then** an internal operator alert is sent to the configured channel (for example Telegram)
+**And** the alert references sender, subject, due date when available, and recommended next action.
+
+**Given** a message lacks enough data for confident triage
+**When** classification completes
+**Then** the message is routed to the `Review Queue` with reason `needs_priority_review`
+**And** no external reminder is sent.

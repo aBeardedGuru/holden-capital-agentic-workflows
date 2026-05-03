@@ -1,0 +1,246 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://holdencapital.io/schemas/refactor-job.schema.json",
+  "title": "Refactor Agent Job",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "job_id",
+    "flow_name",
+    "enabled",
+    "repo",
+    "scan",
+    "policy",
+    "validation",
+    "git",
+    "processing"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "job_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "flow_name": {
+      "type": "string",
+      "const": "codebase_refactor_pr_automation"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "repo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "local_path",
+        "default_base_branch"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "local_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "default_base_branch": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "scan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "include_globs",
+        "exclude_globs",
+        "max_files",
+        "categories"
+      ],
+      "properties": {
+        "include_globs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "exclude_globs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "max_files": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "categories": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "duplication",
+              "complexity",
+              "dead_code",
+              "naming",
+              "architecture",
+              "maintainability"
+            ]
+          }
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min_confidence",
+        "allowed_risk_levels",
+        "max_files_changed_per_pr",
+        "max_lines_changed_per_pr",
+        "max_prs_per_run",
+        "allow_dependency_updates",
+        "allow_cross_module_refactors"
+      ],
+      "properties": {
+        "min_confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "allowed_risk_levels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          }
+        },
+        "max_files_changed_per_pr": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_lines_changed_per_pr": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_prs_per_run": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "allow_dependency_updates": {
+          "type": "boolean"
+        },
+        "allow_cross_module_refactors": {
+          "type": "boolean"
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commands"
+      ],
+      "properties": {
+        "commands": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "git": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "branch_prefix",
+        "commit_prefix",
+        "target_base_branch",
+        "create_draft_pr"
+      ],
+      "properties": {
+        "branch_prefix": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit_prefix": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_base_branch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "create_draft_pr": {
+          "type": "boolean"
+        }
+      }
+    },
+    "processing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "created_at",
+        "queued_at",
+        "status",
+        "attempt_count"
+      ],
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "queued_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "processing_started_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "processing_completed_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "queued",
+            "processing",
+            "complete",
+            "failed"
+          ]
+        },
+        "attempt_count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

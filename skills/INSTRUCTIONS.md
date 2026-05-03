@@ -12,6 +12,8 @@ Use this node for repo-local Codex skills that agents can load quickly for repea
   - for creating and cleaning up git worktrees for parallel local development
 - `holden-finance-contract-sync`
   - for finance automation changes that must keep `planning -> docs -> automation` in sync
+- `holden-finance-intake-doc-rollout`
+  - for repeatable rollout of new finance document types, including classifier output, routing, and sheet mapping
 
 ## Writing Standard
 

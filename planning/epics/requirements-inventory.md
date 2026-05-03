@@ -8,13 +8,13 @@ FR2: Run OpenRouter-backed classification/extraction in n8n for each finance job
 
 FR3: Process valid extraction output through n8n so Google Sheets is updated and the source document is moved to processed, review, or error folders.
 
-FR4: Generate a weekly financial snapshot draft from normalized income, expense, invoice, and exception inputs.
+FR4: Generate periodic financial summary drafts (weekly and monthly) from normalized income, expense, invoice, and exception inputs.
 
-FR5: Include property-level breakdowns in the weekly snapshot when property-level data is available.
+FR5: Include property-level breakdowns in periodic summaries when property-level data is available.
 
-FR6: Surface uncategorized expenses, material variances, overdue invoices, and other recommended review actions in the weekly snapshot.
+FR6: Surface uncategorized expenses, material variances, overdue invoices, and other recommended review actions in periodic summaries.
 
-FR7: Log report source inputs and generation timestamp when a weekly snapshot is stored or sent.
+FR7: Log report source inputs and generation timestamp when a periodic summary is stored or sent.
 
 FR8: Classify invoice records as new, open, paid, partial, overdue, disputed, or review required.
 
@@ -23,6 +23,8 @@ FR9: Prepare overdue invoice reminder drafts without sending them unless approva
 FR10: Mark paid invoices complete and avoid queuing follow-up.
 
 FR11: Mark invoice/payment amount mismatches as reconciliation exceptions.
+
+FR22: Classify billing and deposit-related inbound communications by operational priority and send internal alerts for high-priority finance items.
 
 FR12: Suggest category, property/entity, confidence, and review status for each expense source record.
 
@@ -43,6 +45,14 @@ FR19: Record audit details for every processed document or source record, includ
 FR20: Log duplicate detection decisions.
 
 FR21: Capture human classification changes and reasons.
+
+FR23: Provide one unified operator command surface that shows finance intake status, review queue status, invoice follow-up drafts, and periodic summary status in one workflow session.
+
+FR24: Define and version cross-repo contracts between `holden-capital-agentic-workflows` finance artifacts and `holden-capital-mono` runtime/UI surfaces.
+
+FR25: Provide an end-to-end daily close run path that can be executed without manual repo-to-repo data stitching.
+
+FR26: Require bridge-level acceptance checks proving that finance workflow outputs are visible and actionable in the operator-facing monorepo experience.
 
 ## NonFunctional Requirements
 
@@ -70,7 +80,8 @@ NFR7: Runtime files must remain under ignored `runtime/` paths and must not be c
 - Use `automation/schemas/finance-extraction.schema.json` for model-generated output.
 - Use runtime directories under `runtime/finance-document-intake/`.
 - Maintain explicit approval gates before any external reminder or accounting post.
-- Architecture and UX design artifacts do not yet exist for this feature set; this epic breakdown derives implementation constraints from the PRD and finance intake document.
+- Architecture artifacts exist for finance workflow contracts; dedicated unified-front UX documentation is still required.
+- Cross-repo promotion gates are required so planning/doc contract updates in this repo align with runtime/UI behavior in `holden-capital-mono`.
 
 ## UX Design Requirements
 
@@ -84,7 +95,7 @@ FR2: Epic 1 - OpenRouter extraction in n8n.
 
 FR3: Epic 1 - Sheets update and Drive file routing.
 
-FR4: Epic 4 - Weekly snapshot generation.
+FR4: Epic 4 - Periodic summary generation.
 
 FR5: Epic 4 - Property-level reporting.
 
@@ -99,6 +110,8 @@ FR9: Epic 3 - Overdue reminder draft queue.
 FR10: Epic 3 - Paid invoice completion handling.
 
 FR11: Epic 3 - Reconciliation exception handling.
+
+FR22: Epic 3 - Billing and deposit communication priority triage with internal alerts.
 
 FR12: Epic 2 - Expense classification.
 
@@ -119,3 +132,11 @@ FR19: Epic 1 - Shared audit trail.
 FR20: Epic 1 - Duplicate decision logging.
 
 FR21: Epic 1 - Human correction audit trail.
+
+FR23: Epic 5 - Unified operator command surface.
+
+FR24: Epic 5 - Cross-repo contract versioning and boundary ownership.
+
+FR25: Epic 5 - End-to-end daily close execution path.
+
+FR26: Epic 5 - Bridge acceptance validation for unified workflow.

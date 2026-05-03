@@ -1,0 +1,21 @@
+services:
+  holden-finance-dashboard:
+    build:
+      context: ../..
+      dockerfile: automation/dashboard/Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - /home/dank/.config/holden-capital:/run/holden-config:ro
+      - ./:/app
+    ports:
+      - "8501:8501"
+    command:
+      - streamlit
+      - run
+      - app.py
+      - --server.port=8501
+      - --server.address=0.0.0.0
+      - --server.runOnSave=true
+      - --server.fileWatcherType=poll
+    restart: unless-stopped
