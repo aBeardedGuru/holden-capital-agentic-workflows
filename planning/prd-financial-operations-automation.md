@@ -22,9 +22,9 @@ The first useful product is not "automated accounting." That is too broad and to
 2. Extracts structured financial data.
 3. Classifies invoices, expenses, and reporting inputs.
 4. Queues uncertain items for review.
-5. Produces weekly financial visibility without manual spreadsheet assembly.
+5. Produces periodic financial visibility (weekly and monthly) without manual spreadsheet assembly.
 
-Why this matters: financial work gets painful when documents, invoices, receipts, and transaction context live in different places. The product should make the weekly review faster, make missing invoices visible, and keep expenses categorized with enough audit trail to support bookkeeping and tax work.
+Why this matters: financial work gets painful when documents, invoices, receipts, and transaction context live in different places. The product should make weekly and month-end review faster, make missing invoices visible, and keep expenses categorized with enough audit trail to support bookkeeping and tax work.
 
 ## 2. Primary User
 
@@ -35,7 +35,7 @@ Jobs to be done:
 - When finance documents arrive, I want them captured and classified so I do not manually file and transcribe them.
 - When invoices are open or overdue, I want a clear queue so I can collect or follow up before they become surprises.
 - When expenses hit bank or card accounts, I want suggested categories and property attribution so bookkeeping stays current.
-- When I review the business weekly, I want income, expenses, invoice status, and exceptions summarized in one place.
+- When I review the business weekly or monthly, I want income, expenses, invoice status, and exceptions summarized in one place.
 
 Secondary users:
 
@@ -59,8 +59,8 @@ The MVP is documentation and dry-run workflow design for three financial flows:
 
 | Flow | User Value | MVP Behavior |
 | --- | --- | --- |
-| Weekly Financial Snapshot | Operator sees cash flow and exceptions faster | Assemble a dry-run weekly report from normalized source data. |
-| Invoice Collection Queue | Operator sees open/overdue invoices and follow-up actions | Classify invoice status and queue reminder drafts for approval. |
+| Periodic Financial Summarization | Operator sees cash flow and exceptions faster | Assemble dry-run weekly and month-end summaries from normalized source data. |
+| Invoice Collection Queue | Operator sees open/overdue invoices and follow-up actions | Classify invoice status, triage billing communications, and queue reminder drafts for approval. |
 | Expense Intake and Categorization | Operator/bookkeeper sees categorized expense drafts | Extract, classify, and route low-confidence items to review. |
 
 The MVP must integrate with the existing finance document intake direction:
@@ -96,13 +96,15 @@ Acceptance criteria:
 - Given a processing record is created, when OpenRouter classification completes, then strict JSON output is written to the expected output path.
 - Given output is valid, when n8n processes it, then Google Sheets is updated and the source file is moved to the correct processed/review/error folder.
 
-### FR2: Weekly Financial Snapshot Dry Run
+### FR2: Periodic Financial Summarization Dry Run
 
-The system must generate a weekly financial snapshot draft.
+The system must generate periodic financial summary drafts.
 
 Acceptance criteria:
 
-- Given normalized income, expense, invoice, and exception inputs for a reporting period, when the flow runs, then it returns a weekly summary with income, expenses, net, open invoices, overdue invoices, and exception count.
+- Given normalized income, expense, invoice, and exception inputs for a reporting period, when the flow runs, then it returns a summary with income, expenses, net, open invoices, overdue invoices, and exception count.
+- Given the reporting period is weekly, when the flow runs, then it returns a weekly operator summary.
+- Given the reporting period is monthly, when the flow runs, then it returns a month-end summary with period totals and outstanding exceptions.
 - Given property-level data is available, when the flow runs, then the report includes property breakdowns.
 - Given uncategorized expenses or material variances exist, when the flow runs, then the report lists recommended review actions.
 - Given the report is generated, when it is stored or sent, then the source inputs and generation timestamp are logged.
@@ -117,6 +119,7 @@ Acceptance criteria:
 - Given an overdue invoice with amount due greater than zero, when the flow runs, then it prepares a reminder draft but does not send it without approval.
 - Given a paid invoice, when the flow runs, then it marks the invoice complete and does not queue follow-up.
 - Given invoice and payment amounts do not match, when the flow runs, then it marks the item as a reconciliation exception.
+- Given inbound billing or deposit-related communications are detected, when the flow runs, then it classifies communication priority and sends an internal operator alert for high-priority finance items.
 
 ### FR4: Expense Intake And Categorization Dry Run
 
@@ -222,13 +225,13 @@ Smallest validation:
 - Classify open/paid/overdue/review required.
 - Generate reminder drafts without sending.
 
-### Priority 3: Weekly Financial Snapshot
+### Priority 3: Periodic Financial Summarization
 
-Why third: reporting depends on clean transaction and invoice inputs. Build it after intake and invoice classification create usable data.
+Why third: summarization depends on clean transaction and invoice inputs. Build it after intake and invoice classification create usable data.
 
 Smallest validation:
 
-- Produce one weekly summary from Google Sheets data.
+- Produce one weekly summary and one month-end summary from Google Sheets data.
 - Include income, expenses, net, overdue invoices, uncategorized expenses, and exceptions.
 
 ## 10. Success Metrics
@@ -242,6 +245,7 @@ MVP success is not "fully automated books." MVP success is measurable reduction 
 | Review routing | 100% of low-confidence or missing-data items enter review queue. |
 | Duplicate prevention | 0 duplicate draft entries from repeated source records in test set. |
 | Weekly review prep time | Reduce manual weekly finance prep by at least 50% after flows are live. |
+| Month-end prep time | Reduce manual month-end finance prep by at least 40% after flows are live. |
 
 ## 11. Key Product Decisions
 
@@ -267,7 +271,7 @@ These need answers before implementation stories are finalized:
 4. What expense categories should be used: existing chart of accounts, CPA-provided categories, or a simple starting taxonomy?
 5. What dollar amount requires a receipt before an expense can be approved?
 6. Who approves invoice reminders before they are sent?
-7. What is the weekly report audience: owner only, bookkeeper, CPA, investors, or partners?
+7. What is the weekly and month-end report audience: owner only, bookkeeper, CPA, investors, or partners?
 
 ## 13. Implementation Notes
 
@@ -275,7 +279,7 @@ Initial implementation should produce docs and dry-run artifacts before live wor
 
 1. `docs/flow-expense-intake-categorization.md`
 2. `docs/flow-invoice-collection-queue.md`
-3. `docs/flow-weekly-financial-snapshot.md`
+3. `docs/flow-periodic-financial-summarization.md`
 4. `docs/financial-event-schema.md`
 5. `docs/financial-automation-readiness-checklist.md`
 

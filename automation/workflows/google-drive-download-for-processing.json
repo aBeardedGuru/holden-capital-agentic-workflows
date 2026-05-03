@@ -1,8 +1,10 @@
 {
   "name": "Finance Automation INBOX Simple Intake",
   "settings": {
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
     "executionOrder": "v1",
-    "saveManualExecutions": true
+    "binaryMode": "separate"
   },
   "nodes": [
     {
@@ -74,6 +76,41 @@
               "name": "expenseSheetName",
               "type": "string",
               "value": "Expenses"
+            },
+            {
+              "name": "balanceSheetName",
+              "type": "string",
+              "value": "Balance Sheet"
+            },
+            {
+              "name": "learningLogSheetName",
+              "type": "string",
+              "value": "AI_Learning_Log"
+            },
+            {
+              "name": "validationQueueSheetName",
+              "type": "string",
+              "value": "AI_Validation_Queue"
+            },
+            {
+              "name": "validatedExamplesSheetName",
+              "type": "string",
+              "value": "AI_Validated_Examples"
+            },
+            {
+              "name": "maxFilesPerRun",
+              "type": "number",
+              "value": 10
+            },
+            {
+              "name": "confidenceReviewThreshold",
+              "type": "number",
+              "value": 0.75
+            },
+            {
+              "name": "maxInlineDocumentBase64Chars",
+              "type": "number",
+              "value": 300000
             }
           ]
         },
@@ -84,7 +121,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        220,
+        224,
         0
       ]
     },
@@ -93,196 +130,89 @@
         "resource": "fileFolder",
         "searchMethod": "query",
         "queryString": "={{ \"'\" + $json.inboxFolderId + \"' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false\" }}",
-        "returnAll": true,
-        "options": {}
+        "returnAll": false,
+        "filter": {},
+        "options": {},
+        "limit": "={{ Number($('Config').first().json.maxFilesPerRun || 10) }}"
       },
       "id": "search-ingest-files",
       "name": "Search INBOX Files",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
+      "position": [
+        944,
+        -128
+      ],
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "REPLACE_WITH_GOOGLE_DRIVE_CREDENTIAL_ID",
           "name": "REPLACE_WITH_GOOGLE_DRIVE_CREDENTIAL_NAME"
         }
-      },
-      "position": [
-        940,
-        -120
-      ]
+      }
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\n\nif (!items.length) {\n  throw new Error('00_INBOX folder is empty.');\n}\n\nconst candidates = items\n  .map(({ json }) => json)\n  .filter((file) => file && file.id && file.mimeType !== 'application/vnd.google-apps.folder');\n\nif (!candidates.length) {\n  throw new Error('00_INBOX contains no downloadable files.');\n}\n\ncandidates.sort((a, b) => {\n  const left = Date.parse(a.createdTime || a.modifiedTime || 0);\n  const right = Date.parse(b.createdTime || b.modifiedTime || 0);\n  return left - right;\n});\n\nconst config = $('Config').first().json;\n\nreturn candidates.map((file) => ({\n  json: {\n    fileId: file.id,\n    fileName: file.name ?? null,\n    mimeType: file.mimeType ?? null,\n    createdTime: file.createdTime ?? null,\n    modifiedTime: file.modifiedTime ?? null,\n    inboxFolderId: config.inboxFolderId,\n    processingLabel: config.processingLabel,\n    repoRoot: config.repoRoot,\n    expenseSpreadsheetId: config.expenseSpreadsheetId,\n    expenseSheetName: config.expenseSheetName,\n  },\n}));"
+        "jsCode": "const items = $input.all();\n\nif (!items.length) {\n  return [];\n}\n\nconst candidates = items\n  .map(({ json }) => json)\n  .filter((file) => file && file.id && file.mimeType !== 'application/vnd.google-apps.folder');\n\nif (!candidates.length) {\n  return [];\n}\n\ncandidates.sort((a, b) => {\n  const left = Date.parse(a.createdTime || a.modifiedTime || 0);\n  const right = Date.parse(b.createdTime || b.modifiedTime || 0);\n  return left - right;\n});\n\nconst config = $('Config').first().json;\nconst maxFiles = Math.max(1, Number(config.maxFilesPerRun || 10));\n\nreturn candidates.slice(0, maxFiles).map((file) => ({\n  json: {\n    fileId: file.id,\n    fileName: file.name ?? null,\n    mimeType: file.mimeType ?? null,\n    createdTime: file.createdTime ?? null,\n    modifiedTime: file.modifiedTime ?? null,\n    inboxFolderId: config.inboxFolderId,\n    processingLabel: config.processingLabel,\n    repoRoot: config.repoRoot,\n    expenseSpreadsheetId: config.expenseSpreadsheetId,\n    expenseSheetName: config.expenseSheetName,\n    idempotencyKey: `drive-${file.id}`,\n  },\n}));"
       },
       "id": "pick-latest-file",
       "name": "Pick Files",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1180,
-        -120
+        1184,
+        -128
       ]
     },
     {
       "parameters": {
         "operation": "download",
         "fileId": "={{ $json.fileId }}",
-        "binaryPropertyName": "data"
+        "options": {}
       },
       "id": "download-file",
       "name": "Download File",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
+      "position": [
+        1424,
+        -128
+      ],
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "REPLACE_WITH_GOOGLE_DRIVE_CREDENTIAL_ID",
           "name": "REPLACE_WITH_GOOGLE_DRIVE_CREDENTIAL_NAME"
         }
-      },
-      "position": [
-        1420,
-        -120
-      ]
+      }
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.item;\nconst binary = item.binary?.data;\n\nif (!binary) {\n  throw new Error('Downloaded file did not include binary data.');\n}\n\nreturn {\n  json: {\n    fileId: item.json.fileId,\n    fileName: binary.fileName ?? item.json.fileName ?? null,\n    mimeType: binary.mimeType ?? item.json.mimeType ?? null,\n    fileSize: binary.fileSize ?? null,\n    ingestFolderId: item.json.ingestFolderId,\n    ingestFolderName: item.json.ingestFolderName,\n    processingLabel: item.json.processingLabel,\n    repoRoot: item.json.repoRoot,\n    driveFileUrl: `https://drive.google.com/file/d/${item.json.fileId}/view`,\n    binaryProperty: 'data',\n    readyForProcessing: true\n  },\n  binary: item.binary,\n};"
+        "jsCode": "const item = $input.item;\nconst bin = item.binary?.data;\nif (!bin) throw new Error('Downloaded file did not include binary data.');\n\nconst documentBase64 = bin.data;\nif (!documentBase64 || typeof documentBase64 !== 'string') {\n  throw new Error('Binary payload did not include base64 file content.');\n}\n\nconst fileName = bin.fileName ?? item.json.fileName ?? null;\nconst mimeType = bin.mimeType ?? item.json.mimeType ?? null;\nconst fileId = item.json.fileId ?? null;\nconst config = $('Config').first().json;\nconst maxInlineChars = Math.max(20000, Number(config.maxInlineDocumentBase64Chars || 300000));\nconst payloadTruncated = documentBase64.length > maxInlineChars;\nconst inlineBase64 = payloadTruncated ? documentBase64.slice(0, maxInlineChars) : documentBase64;\n\nlet validatedExamples = [];\ntry {\n  const rows = $('Fetch Validated Examples').all().map(i => i.json || {});\n  validatedExamples = rows\n    .filter((r) => r.document_type || r.corrected_document_type)\n    .slice(0, 20)\n    .map((r) => ({\n      document_type: r.corrected_document_type || r.document_type || null,\n      status: r.corrected_status || r.status || null,\n      vendor_or_payee: r.corrected_vendor_or_payee || r.vendor_or_payee || null,\n      amount: r.corrected_amount || r.amount || null,\n      expense_category: r.corrected_expense_category || r.expense_category || null,\n      balance_account: r.corrected_balance_account || r.balance_account || null,\n      note: r.correction_reason || r.review_reason || null,\n    }));\n} catch (e) {\n  validatedExamples = [];\n}\n\nreturn {\n  json: {\n    fileId,\n    fileName,\n    mimeType,\n    fileSize: bin.fileSize ?? null,\n    inboxFolderId: item.json.inboxFolderId ?? null,\n    processingLabel: item.json.processingLabel,\n    repoRoot: item.json.repoRoot,\n    expenseSpreadsheetId: item.json.expenseSpreadsheetId,\n    expenseSheetName: item.json.expenseSheetName,\n    balanceSheetName: item.json.balanceSheetName,\n    learningLogSheetName: item.json.learningLogSheetName,\n    validationQueueSheetName: item.json.validationQueueSheetName,\n    validatedExamplesSheetName: item.json.validatedExamplesSheetName,\n    driveFileUrl: fileId ? `https://drive.google.com/file/d/${fileId}/view` : null,\n    idempotencyKey: item.json.idempotencyKey ?? (fileId ? `drive-${fileId}` : null),\n    payloadTruncated,\n    originalDocumentBase64Length: documentBase64.length,\n    documentBase64: inlineBase64,\n    aiInput: {\n      file_name: fileName,\n      mime_type: mimeType,\n      drive_file_url: fileId ? `https://drive.google.com/file/d/${fileId}/view` : null,\n      payload_truncated: payloadTruncated,\n      original_document_base64_length: documentBase64.length,\n      document_base64: inlineBase64,\n      validated_examples: validatedExamples,\n    },\n  },\n  binary: item.binary,\n};"
       },
       "id": "prepare-processing-context",
       "name": "Prepare Processing Context",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1660,
-        -120
+        1664,
+        -128
       ]
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "filter-pdf-mimetype",
-              "leftValue": "={{ $json.mimeType }}",
-              "rightValue": "application/pdf",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "filter-pdf",
-      "name": "Filter PDF",
-      "type": "n8n-nodes-base.filter",
-      "typeVersion": 2.3,
-      "position": [
-        1900,
-        -240
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "filter-text-mimetype",
-              "leftValue": "={{ $json.mimeType }}",
-              "rightValue": "text/",
-              "operator": {
-                "type": "string",
-                "operation": "startsWith"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "filter-text",
-      "name": "Filter Text",
-      "type": "n8n-nodes-base.filter",
-      "typeVersion": 2.3,
-      "position": [
-        1900,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "pdf",
-        "options": {}
-      },
-      "id": "extract-pdf",
-      "name": "Extract PDF Text",
-      "type": "n8n-nodes-base.extractFromFile",
-      "typeVersion": 1,
-      "position": [
-        2140,
-        -240
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "text",
-        "binaryPropertyName": "data",
-        "destinationOutputField": "text",
-        "options": {}
-      },
-      "id": "extract-text",
-      "name": "Extract Plain Text",
-      "type": "n8n-nodes-base.extractFromFile",
-      "typeVersion": 1,
-      "position": [
-        2140,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const item = $input.item;\nconst raw = item.json.text ?? item.json.data ?? item.json.input_text ?? null;\n\nlet extractedText = raw;\nif (raw && typeof raw !== 'string') {\n  extractedText = JSON.stringify(raw, null, 2);\n}\n\nif (!extractedText || !String(extractedText).trim()) {\n  throw new Error('No extracted text was produced for agent processing.');\n}\n\nreturn {\n  json: {\n    ...item.json,\n    extractedText: String(extractedText).trim(),\n  },\n  binary: item.binary,\n};"
-      },
-      "id": "normalize-extracted-text",
-      "name": "Normalize Extracted Text",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2380,
-        -120
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const item = $input.item;\nconst result = item.json.agentOutput ?? {};\n\nreturn {\n  json: {\n    sourceFileId: item.json.sourceFileId,\n    sourceFileName: item.json.sourceFileName,\n    sourceFileUrl: item.json.sourceFileUrl,\n    documentType: item.json.documentType ?? result.document_type ?? 'unknown',\n    status: item.json.status ?? result.status ?? 'processed',\n    reviewQueueRequired: Boolean(item.json.reviewQueueRequired),\n    confidence: item.json.confidence ?? result.confidence ?? null,\n    agentResult: result,\n  },\n};"
+        "jsCode": "const item = $input.item;\nconst result = item.json.agentOutput ?? {};\n\nreturn {\n  json: {\n    sourceFileId: item.json.sourceFileId,\n    sourceFileName: item.json.sourceFileName,\n    sourceFileUrl: item.json.sourceFileUrl,\n    documentType: item.json.documentType ?? result.document_type ?? 'unknown',\n    status: item.json.status ?? result.status ?? 'processed',\n    reviewQueueRequired: Boolean(item.json.reviewQueueRequired),\n    confidence: item.json.confidence ?? result.confidence ?? null,\n    postToExpenses: Boolean(item.json.postToExpenses),\n    statementEndingBalance: item.json.statementEndingBalance ?? null,\n    balanceAccount: item.json.balanceAccount ?? null,\n    expenseCategory: item.json.expenseCategory ?? null,\n    agentResult: result,\n  },\n};"
       },
       "id": "present-agent-result",
       "name": "Present Agent Result",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4540,
-        -240
+        2896,
+        -144
       ]
     },
     {
       "parameters": {
-        "content": "AI-centered flow:\n1. Read files from 00_INBOX by folder ID.\n2. Download + extract text (PDF/text).\n3. Classify using AI Intake Classifier with strict JSON prompt.\n4. Append only invoices to Expenses sheet.\n5. Move each file to done/review/error folders by classification/status.",
+        "content": "AI-centered learning flow with reliability guards:\\n1. Validate config before side effects.\\n2. Read files from 00_INBOX in bounded batches.\\n3. Download document payload and pass bounded base64 + metadata + validated examples to AI Intake Classifier.\\n4. Parse and normalize strict JSON output with confidence threshold routing.\\n5. Write invoice/non-invoice expenses to Expenses, bank statements to Balance Sheet, and low-confidence items to AI_Validation_Queue.\\n6. Append all predictions to AI_Learning_Log for correction + iteration.\\n7. Move files to done/review/error folders.",
         "height": 220,
         "width": 500
       },
@@ -292,20 +222,20 @@
       "typeVersion": 1,
       "position": [
         2720,
-        -500
+        -496
       ]
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.item;\nconst output = item.json.agentOutput ?? {};\nconst docType = output.document_type ?? item.json.documentType ?? 'unknown';\nif (docType !== 'invoice') {\n  return [];\n}\n\nconst amount = typeof output.amount === 'number' ? output.amount : (output.amount ? Number(output.amount) : null);\n\nreturn [{\n  json: {\n    jobId: `invoice-${item.json.sourceFileId || 'unknown'}`,\n    sourceFileId: item.json.sourceFileId,\n    sourceFileName: item.json.sourceFileName,\n    sourceFileUrl: item.json.sourceFileUrl,\n    vendorOrPayee: output.vendor_or_payee ?? null,\n    invoiceNumber: output.invoice_number ?? null,\n    documentDate: output.document_date ?? null,\n    dueDate: null,\n    amount,\n    currency: output.currency ?? 'USD',\n    suggestedCategory: null,\n    suggestedEntity: null,\n    confidence: output.confidence ?? null,\n    summary: output.summary ?? null,\n    status: item.json.status ?? output.status ?? null,\n    extractedAt: new Date().toISOString()\n  }\n}];"
+        "jsCode": "const item = $input.item;\nconst output = item.json.agentOutput ?? {};\nconst docType = output.document_type ?? item.json.documentType ?? 'unknown';\nconst shouldPost = item.json.status === 'processed' && !item.json.reviewQueueRequired && (docType === 'invoice' || Boolean(item.json.postToExpenses) || Boolean(output.post_to_expenses));\nif (!shouldPost) return [];\n\nconst amount = typeof output.amount === 'number' ? output.amount : (output.amount ? Number(output.amount) : null);\nif (amount == null || Number.isNaN(amount)) return [];\n\nreturn [{\n  json: {\n    jobId: `expense-${item.json.sourceFileId || 'unknown'}`,\n    sourceFileId: item.json.sourceFileId,\n    sourceFileName: item.json.sourceFileName,\n    sourceFileUrl: item.json.sourceFileUrl,\n    vendorOrPayee: output.vendor_or_payee ?? null,\n    invoiceNumber: output.invoice_number ?? null,\n    documentDate: output.document_date ?? null,\n    dueDate: null,\n    amount,\n    currency: output.currency ?? 'USD',\n    suggestedCategory: output.expense_category ?? item.json.expenseCategory ?? null,\n    suggestedEntity: null,\n    confidence: output.confidence ?? null,\n    summary: output.summary ?? null,\n    status: item.json.status ?? output.status ?? null,\n    extractedAt: new Date().toISOString()\n  }\n}];"
       },
       "id": "build-expense-row",
       "name": "Build Expense Row",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4540,
-        -20
+        2896,
+        80
       ]
     },
     {
@@ -353,16 +283,16 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        4780,
-        -20
+        3136,
+        80
       ],
-      "onError": "continueRegularOutput",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
           "name": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_NAME"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -378,8 +308,8 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        220,
-        -220
+        224,
+        -224
       ],
       "id": "schedule-trigger-ingest",
       "name": "Schedule Trigger"
@@ -393,44 +323,77 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4780,
-        -240
+        3136,
+        -144
       ]
     },
     {
       "parameters": {
         "operation": "move",
         "fileId": "={{$json.sourceFileId}}",
-        "folderId": "={{$json.targetFolderId}}",
-        "options": {}
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": "={{$json.targetFolderId}}"
       },
       "id": "move-processed-file",
       "name": "Move Processed File",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        5020,
-        -240
+        3376,
+        -144
       ],
-      "onError": "continueRegularOutput",
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "REPLACE_WITH_GOOGLE_DRIVE_CREDENTIAL_ID",
           "name": "REPLACE_WITH_GOOGLE_DRIVE_CREDENTIAL_NAME"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a finance intake classifier with iterative learning.\\nInput is JSON containing document bytes as base64 in \"document_base64\", plus \"file_name\", \"mime_type\", \"drive_file_url\", and optional \"validated_examples\".\\nInput may be truncated. If payload_truncated is true, be conservative and route to review unless evidence is clear.\\n\\nReturn ONLY valid JSON with this exact schema:\\n{\\n  \"document_type\": \"invoice|bank_statement|other|unknown\",\\n  \"status\": \"processed|needs_review|failed\",\\n  \"confidence\": 0.0,\\n  \"vendor_or_payee\": \"string|null\",\\n  \"document_date\": \"YYYY-MM-DD|null\",\\n  \"amount\": 0.0,\\n  \"currency\": \"USD|null\",\\n  \"invoice_number\": \"string|null\",\\n  \"review_reason\": \"string|null\",\\n  \"summary\": \"string\",\\n  \"post_to_expenses\": true,\\n  \"expense_category\": \"string|null\",\\n  \"statement_ending_balance\": 0.0,\\n  \"balance_account\": \"string|null\"\\n}\\n\\nRules:\\n- If confidence < 0.75, set status=\"needs_review\" and set review_reason.\\n- If content is unreadable or insufficient, set status=\"failed\".\\n- Use \"bank_statement\" only for bank statements.\\n- For bank statements, populate statement_ending_balance when visible.\\n- Set post_to_expenses=true for invoices and non-invoice expenses that should hit expense tracking.\\n- If payload_truncated is true and confidence is not high, set status=\"needs_review\" with an explicit review_reason.\\n- Do not output markdown or prose. JSON only."
+        }
+      },
+      "id": "ai_agent_1",
+      "name": "AI Intake Classifier",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2080,
+        -160
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item;\nconst source = $('Prepare Processing Context').item.json;\nconst config = $('Config').first().json;\n\nlet raw = item.json.output ?? item.json.response ?? item.json.text ?? item.json.result ?? '';\nif (typeof raw !== 'string') raw = JSON.stringify(raw ?? {});\nraw = raw.trim();\nif (raw.startsWith('```')) {\n  const lines = raw.split('\\n');\n  if (lines[0].startsWith('```')) lines.shift();\n  if (lines.length && lines[lines.length - 1].startsWith('```')) lines.pop();\n  raw = lines.join('\\n').trim();\n}\n\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  parsed = {\n    document_type: 'unknown',\n    status: 'failed',\n    confidence: 0,\n    vendor_or_payee: null,\n    document_date: null,\n    amount: null,\n    currency: null,\n    invoice_number: null,\n    review_reason: `Invalid AI JSON: ${e.message}`,\n    summary: 'AI output parse failed',\n    post_to_expenses: false,\n    expense_category: null,\n    statement_ending_balance: null,\n    balance_account: null,\n  };\n}\n\nconst allowedTypes = new Set(['invoice', 'bank_statement', 'other', 'unknown']);\nconst allowedStatus = new Set(['processed', 'needs_review', 'failed']);\nconst type = allowedTypes.has(parsed.document_type) ? parsed.document_type : 'unknown';\nconst threshold = Number(config.confidenceReviewThreshold ?? 0.75);\nlet confidence = Number(parsed.confidence ?? 0);\nif (!Number.isFinite(confidence)) confidence = 0;\nconfidence = Math.max(0, Math.min(1, confidence));\nlet status = allowedStatus.has(parsed.status) ? parsed.status : 'processed';\n\nconst amount = typeof parsed.amount === 'number' ? parsed.amount : (parsed.amount ? Number(parsed.amount) : null);\nconst endingBalance = typeof parsed.statement_ending_balance === 'number'\n  ? parsed.statement_ending_balance\n  : (parsed.statement_ending_balance ? Number(parsed.statement_ending_balance) : null);\n\nlet reviewReason = parsed.review_reason ?? null;\nif (status === 'processed' && confidence < threshold) {\n  status = 'needs_review';\n  reviewReason = reviewReason || `Confidence ${confidence.toFixed(2)} below threshold ${threshold}`;\n}\n\nif (source.payloadTruncated && status !== 'failed') {\n  status = 'needs_review';\n  reviewReason = reviewReason || 'Input payload was truncated before AI classification';\n}\n\nconst reviewQueueRequired = status !== 'processed' || Boolean(reviewReason);\n\nreturn [{\n  json: {\n    agentOutput: {\n      ...parsed,\n      review_reason: reviewReason,\n    },\n    documentType: type,\n    status,\n    reviewQueueRequired,\n    confidence,\n    vendorOrPayee: parsed.vendor_or_payee ?? null,\n    invoiceNumber: parsed.invoice_number ?? null,\n    documentDate: parsed.document_date ?? null,\n    amount: amount == null || Number.isNaN(amount) ? null : amount,\n    currency: parsed.currency ?? 'USD',\n    summary: parsed.summary ?? null,\n    postToExpenses: Boolean(parsed.post_to_expenses),\n    expenseCategory: parsed.expense_category ?? null,\n    statementEndingBalance: endingBalance == null || Number.isNaN(endingBalance) ? null : endingBalance,\n    balanceAccount: parsed.balance_account ?? null,\n    sourceFileId: source.fileId,\n    sourceFileName: source.fileName,\n    sourceFileUrl: source.driveFileUrl,\n    idempotencyKey: source.idempotencyKey ?? (source.fileId ? `drive-${source.fileId}` : null),\n    payloadTruncated: Boolean(source.payloadTruncated),\n    reviewReason,\n  }\n}];"
+      },
+      "id": "ai_parse_1",
+      "name": "Parse AI Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2384,
+        -160
+      ]
     },
     {
       "parameters": {
         "options": {}
       },
       "id": "ai_model_1",
-      "name": "Claude Classifier",
+      "name": "Document Classifier",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
       "position": [
-        2580,
-        40
+        1952,
+        32
       ],
       "credentials": {
         "openRouterApi": {
@@ -441,31 +404,256 @@
     },
     {
       "parameters": {
-        "options": {
-          "systemMessage": "You are a finance intake classifier. Analyze the provided extracted document text.\nReturn ONLY valid JSON with this exact schema:\n{\n  \"document_type\": \"invoice|bank_statement|other|unknown\",\n  \"status\": \"processed|needs_review|failed\",\n  \"confidence\": 0.0,\n  \"vendor_or_payee\": \"string|null\",\n  \"document_date\": \"YYYY-MM-DD|null\",\n  \"amount\": 0.0,\n  \"currency\": \"USD|null\",\n  \"invoice_number\": \"string|null\",\n  \"review_reason\": \"string|null\",\n  \"summary\": \"string\"\n}\nRules:\n- If confidence < 0.75, set status=\"needs_review\" and set review_reason.\n- If unreadable or insufficient content, set status=\"failed\".\n- Use \"bank_statement\" only for bank statements.\n- Use \"invoice\" only for invoices.\n- Do not output markdown or prose. JSON only."
-        }
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $(\"Config\").first().json.expenseSpreadsheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $(\"Config\").first().json.validatedExamplesSheetName }}"
+        },
+        "options": {}
       },
-      "id": "ai_agent_1",
-      "name": "AI Intake Classifier",
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
+      "id": "fetch-validated-examples",
+      "name": "Fetch Validated Examples",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
       "position": [
-        2820,
-        -120
+        1200,
+        200
       ],
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_NAME"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.item;\nconst source = $('Normalize Extracted Text').item.json;\n\nlet raw = item.json.output ?? item.json.response ?? item.json.text ?? item.json.result ?? '';\nif (typeof raw !== 'string') {\n  raw = JSON.stringify(raw ?? {});\n}\nraw = raw.trim();\n\nif (raw.startsWith('```')) {\n  const lines = raw.split('\\n');\n  if (lines[0].startsWith('```')) lines.shift();\n  if (lines.length && lines[lines.length - 1].startsWith('```')) lines.pop();\n  raw = lines.join('\\n').trim();\n}\n\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  parsed = {\n    document_type: 'unknown',\n    status: 'failed',\n    confidence: 0,\n    vendor_or_payee: null,\n    document_date: null,\n    amount: null,\n    currency: null,\n    invoice_number: null,\n    review_reason: `Invalid AI JSON: ${e.message}`,\n    summary: 'AI output parse failed',\n  };\n}\n\nconst confidence = Number(parsed.confidence ?? 0);\nlet status = parsed.status ?? 'processed';\nif (status === 'processed' && confidence < 0.75) {\n  status = 'needs_review';\n}\n\nreturn [{\n  json: {\n    agentOutput: parsed,\n    documentType: parsed.document_type ?? 'unknown',\n    status,\n    reviewQueueRequired: status === 'needs_review' || Boolean(parsed.review_reason),\n    confidence,\n    vendorOrPayee: parsed.vendor_or_payee ?? null,\n    invoiceNumber: parsed.invoice_number ?? null,\n    documentDate: parsed.document_date ?? null,\n    amount: typeof parsed.amount === 'number' ? parsed.amount : (parsed.amount ? Number(parsed.amount) : null),\n    currency: parsed.currency ?? 'USD',\n    summary: parsed.summary ?? null,\n    sourceFileId: source.fileId,\n    sourceFileName: source.fileName,\n    sourceFileUrl: source.driveFileUrl,\n  }\n}];"
+        "jsCode": "const item = $input.item;\nconst output = item.json.agentOutput ?? {};\nconst docType = output.document_type ?? item.json.documentType ?? 'unknown';\nif (docType !== 'bank_statement' || item.json.status !== 'processed' || item.json.reviewQueueRequired) return [];\n\nreturn [{\n  json: {\n    sourceFileId: item.json.sourceFileId,\n    sourceFileName: item.json.sourceFileName,\n    sourceFileUrl: item.json.sourceFileUrl,\n    statementDate: output.document_date ?? item.json.documentDate ?? null,\n    endingBalance: output.statement_ending_balance ?? item.json.statementEndingBalance ?? null,\n    balanceAccount: output.balance_account ?? item.json.balanceAccount ?? null,\n    confidence: output.confidence ?? item.json.confidence ?? null,\n    summary: output.summary ?? item.json.summary ?? null,\n    status: item.json.status ?? output.status ?? null,\n    loggedAt: new Date().toISOString()\n  }\n}];"
       },
-      "id": "ai_parse_1",
-      "name": "Parse AI Output",
+      "id": "build-balance-row",
+      "name": "Build Balance Row",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3060,
-        -120
+        4544,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $(\"Config\").first().json.expenseSpreadsheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $(\"Config\").first().json.balanceSheetName }}"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sourceFileId": "={{$json.sourceFileId}}",
+            "sourceFileName": "={{$json.sourceFileName}}",
+            "sourceFileUrl": "={{$json.sourceFileUrl}}",
+            "statementDate": "={{$json.statementDate}}",
+            "endingBalance": "={{$json.endingBalance}}",
+            "balanceAccount": "={{$json.balanceAccount}}",
+            "confidence": "={{$json.confidence}}",
+            "summary": "={{$json.summary}}",
+            "status": "={{$json.status}}",
+            "loggedAt": "={{$json.loggedAt}}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "append-bank-statement-balance",
+      "name": "Append Bank Statement To Balance Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        4790,
+        180
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item;\nconst output = item.json.agentOutput ?? {};\nreturn [{\n  json: {\n    processedAt: new Date().toISOString(),\n    sourceFileId: item.json.sourceFileId,\n    sourceFileName: item.json.sourceFileName,\n    sourceFileUrl: item.json.sourceFileUrl,\n    document_type: item.json.documentType ?? output.document_type ?? null,\n    status: item.json.status ?? output.status ?? null,\n    confidence: item.json.confidence ?? output.confidence ?? null,\n    vendor_or_payee: output.vendor_or_payee ?? null,\n    amount: output.amount ?? null,\n    currency: output.currency ?? null,\n    invoice_number: output.invoice_number ?? null,\n    expense_category: output.expense_category ?? null,\n    statement_ending_balance: output.statement_ending_balance ?? null,\n    balance_account: output.balance_account ?? null,\n    review_reason: item.json.reviewReason ?? output.review_reason ?? null,\n    summary: output.summary ?? null,\n    corrected_document_type: null,\n    corrected_status: null,\n    corrected_vendor_or_payee: null,\n    corrected_amount: null,\n    corrected_expense_category: null,\n    corrected_balance_account: null,\n    correction_reason: null,\n    validated: false\n  }\n}];"
+      },
+      "id": "build-learning-log-row",
+      "name": "Build Learning Log Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4544,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $(\"Config\").first().json.expenseSpreadsheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $(\"Config\").first().json.learningLogSheetName }}"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "processedAt": "={{$json.processedAt}}",
+            "sourceFileId": "={{$json.sourceFileId}}",
+            "sourceFileName": "={{$json.sourceFileName}}",
+            "sourceFileUrl": "={{$json.sourceFileUrl}}",
+            "document_type": "={{$json.document_type}}",
+            "status": "={{$json.status}}",
+            "confidence": "={{$json.confidence}}",
+            "vendor_or_payee": "={{$json.vendor_or_payee}}",
+            "amount": "={{$json.amount}}",
+            "currency": "={{$json.currency}}",
+            "invoice_number": "={{$json.invoice_number}}",
+            "expense_category": "={{$json.expense_category}}",
+            "statement_ending_balance": "={{$json.statement_ending_balance}}",
+            "balance_account": "={{$json.balance_account}}",
+            "review_reason": "={{$json.review_reason}}",
+            "summary": "={{$json.summary}}",
+            "corrected_document_type": "={{$json.corrected_document_type}}",
+            "corrected_status": "={{$json.corrected_status}}",
+            "corrected_vendor_or_payee": "={{$json.corrected_vendor_or_payee}}",
+            "corrected_amount": "={{$json.corrected_amount}}",
+            "corrected_expense_category": "={{$json.corrected_expense_category}}",
+            "corrected_balance_account": "={{$json.corrected_balance_account}}",
+            "correction_reason": "={{$json.correction_reason}}",
+            "validated": "={{$json.validated}}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "append-ai-learning-log",
+      "name": "Append AI Learning Log",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        4790,
+        340
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item;\nif (!item.json.reviewQueueRequired) return [];\nconst output = item.json.agentOutput ?? {};\nreturn [{\n  json: {\n    queuedAt: new Date().toISOString(),\n    sourceFileId: item.json.sourceFileId,\n    sourceFileName: item.json.sourceFileName,\n    sourceFileUrl: item.json.sourceFileUrl,\n    suggested_document_type: item.json.documentType ?? output.document_type ?? null,\n    suggested_status: item.json.status ?? output.status ?? null,\n    suggested_vendor_or_payee: output.vendor_or_payee ?? null,\n    suggested_amount: output.amount ?? null,\n    suggested_expense_category: output.expense_category ?? null,\n    suggested_balance_account: output.balance_account ?? null,\n    confidence: item.json.confidence ?? output.confidence ?? null,\n    review_reason: item.json.reviewReason ?? output.review_reason ?? null,\n    summary: output.summary ?? null,\n    validation_status: \"pending\",\n    reviewer: null,\n    reviewedAt: null,\n    correction_reason: null\n  }\n}];"
+      },
+      "id": "build-validation-queue-row",
+      "name": "Build Validation Queue Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4544,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $(\"Config\").first().json.expenseSpreadsheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $(\"Config\").first().json.validationQueueSheetName }}"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "queuedAt": "={{$json.queuedAt}}",
+            "sourceFileId": "={{$json.sourceFileId}}",
+            "sourceFileName": "={{$json.sourceFileName}}",
+            "sourceFileUrl": "={{$json.sourceFileUrl}}",
+            "suggested_document_type": "={{$json.suggested_document_type}}",
+            "suggested_status": "={{$json.suggested_status}}",
+            "suggested_vendor_or_payee": "={{$json.suggested_vendor_or_payee}}",
+            "suggested_amount": "={{$json.suggested_amount}}",
+            "suggested_expense_category": "={{$json.suggested_expense_category}}",
+            "suggested_balance_account": "={{$json.suggested_balance_account}}",
+            "confidence": "={{$json.confidence}}",
+            "review_reason": "={{$json.review_reason}}",
+            "summary": "={{$json.summary}}",
+            "validation_status": "={{$json.validation_status}}",
+            "reviewer": "={{$json.reviewer}}",
+            "reviewedAt": "={{$json.reviewedAt}}",
+            "correction_reason": "={{$json.correction_reason}}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "append-validation-queue",
+      "name": "Append Validation Queue",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        4790,
+        500
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $input.item.json;\n\nconst requiredKeys = [\n  'inboxFolderId',\n  'doneInvoicesFolderId',\n  'doneBankStatementsFolderId',\n  'doneOtherFolderId',\n  'reviewFolderId',\n  'errorFolderId',\n  'expenseSpreadsheetId',\n  'expenseSheetName',\n  'balanceSheetName',\n  'learningLogSheetName',\n  'validationQueueSheetName',\n  'validatedExamplesSheetName',\n];\n\nconst missing = requiredKeys.filter((key) => {\n  const value = cfg[key];\n  return value == null || String(value).trim() === '' || String(value).startsWith('REPLACE_WITH_');\n});\n\nif (missing.length) {\n  throw new Error(`Config placeholders or missing values: ${missing.join(', ')}`);\n}\n\nconst maxFilesPerRun = Number(cfg.maxFilesPerRun ?? 10);\nif (!Number.isFinite(maxFilesPerRun) || maxFilesPerRun < 1 || maxFilesPerRun > 100) {\n  throw new Error('maxFilesPerRun must be between 1 and 100');\n}\n\nconst confidenceThreshold = Number(cfg.confidenceReviewThreshold ?? 0.75);\nif (!Number.isFinite(confidenceThreshold) || confidenceThreshold <= 0 || confidenceThreshold >= 1) {\n  throw new Error('confidenceReviewThreshold must be between 0 and 1');\n}\n\nreturn [{ json: cfg }];"
+      },
+      "id": "guard-config",
+      "name": "Guard Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        0
       ]
     }
   ],
@@ -485,7 +673,7 @@
       "main": [
         [
           {
-            "node": "Search INBOX Files",
+            "node": "Guard Config",
             "type": "main",
             "index": 0
           }
@@ -504,66 +692,6 @@
       ]
     },
     "Prepare Processing Context": {
-      "main": [
-        [
-          {
-            "node": "Filter PDF",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Filter Text",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Filter PDF": {
-      "main": [
-        [
-          {
-            "node": "Extract PDF Text",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Filter Text": {
-      "main": [
-        [
-          {
-            "node": "Extract Plain Text",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract PDF Text": {
-      "main": [
-        [
-          {
-            "node": "Normalize Extracted Text",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract Plain Text": {
-      "main": [
-        [
-          {
-            "node": "Normalize Extracted Text",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Normalize Extracted Text": {
       "main": [
         [
           {
@@ -640,17 +768,6 @@
         ]
       ]
     },
-    "Claude Classifier": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Intake Classifier",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "AI Intake Classifier": {
       "main": [
         [
@@ -672,6 +789,81 @@
           },
           {
             "node": "Build Expense Row",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Balance Row",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Learning Log Row",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Validation Queue Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Classifier": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Intake Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Balance Row": {
+      "main": [
+        [
+          {
+            "node": "Append Bank Statement To Balance Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Learning Log Row": {
+      "main": [
+        [
+          {
+            "node": "Append AI Learning Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Validation Queue Row": {
+      "main": [
+        [
+          {
+            "node": "Append Validation Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard Config": {
+      "main": [
+        [
+          {
+            "node": "Search INBOX Files",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Validated Examples",
             "type": "main",
             "index": 0
           }

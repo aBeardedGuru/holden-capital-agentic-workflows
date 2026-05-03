@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://holdencapital.io/schemas/council-deal-scorecard-row.schema.json",
+  "title": "Council Deal Scorecard Row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "deal_id",
+    "recorded_at",
+    "asset_name",
+    "asset_type",
+    "market",
+    "purchase_price",
+    "capital_required",
+    "base_case_return",
+    "upside_case_return",
+    "downside_case_return",
+    "max_loss_estimate",
+    "key_risks",
+    "kill_criteria",
+    "status",
+    "lesson",
+    "approved_for_retrieval"
+  ],
+  "properties": {
+    "deal_id": {"type": "string", "minLength": 1},
+    "recorded_at": {"type": "string", "minLength": 1},
+    "asset_name": {"type": "string", "minLength": 1},
+    "asset_type": {"type": "string", "minLength": 1},
+    "market": {"type": "string", "minLength": 1},
+    "purchase_price": {"type": ["number", "null"]},
+    "capital_required": {"type": ["number", "null"]},
+    "base_case_return": {"type": ["number", "null"]},
+    "upside_case_return": {"type": ["number", "null"]},
+    "downside_case_return": {"type": ["number", "null"]},
+    "max_loss_estimate": {"type": ["number", "null"]},
+    "key_risks": {"type": "string"},
+    "kill_criteria": {"type": "string"},
+    "status": {"type": "string", "minLength": 1},
+    "lesson": {"type": ["string", "null"]},
+    "approved_for_retrieval": {"type": "boolean"}
+  }
+}

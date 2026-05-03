@@ -1,0 +1,17 @@
+{
+  "entry_id": "dj-001",
+  "decision_date": "2026-05-03",
+  "decision_type": "business_decision",
+  "title": "Delay full-time operations hire until role scope is cleaner",
+  "summary": "Chose a narrower interim staffing step instead of a rushed full-time hire.",
+  "preferred_option": "Delay full-time hire and use a narrower interim step",
+  "other_options": "Hire now | Keep contractor model unchanged",
+  "capital_at_risk": 120000,
+  "time_horizon": "12 months",
+  "known_risks": "Role ambiguity; onboarding burden; fixed cost growth",
+  "unknowns": "Candidate quality; month-one ownership split",
+  "actual_outcome": "The narrower step reduced chaos and clarified the role.",
+  "lesson": "Clarify the system before hardening fixed cost.",
+  "tags": "hiring,operations,clarity,sequencing",
+  "approved_for_retrieval": true
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "request_id": "council-2026-05-03-insufficient-001",
+  "decision_type": "deal_review",
+  "question": "Should I do this deal?",
+  "context": "I found something that looks interesting and might cash flow.",
+  "options_considered": [],
+  "preferred_option": null,
+  "time_horizon": null,
+  "capital_at_risk": null,
+  "resource_commitment": null,
+  "upside_case": null,
+  "base_case": null,
+  "downside_case": null,
+  "known_risks": [],
+  "unknowns": [
+    "Purchase price",
+    "Capital required",
+    "Expected return",
+    "Why it is attractive"
+  ],
+  "constraints": [],
+  "values_or_principles": [],
+  "requested_at": "2026-05-03T17:15:00Z"
+}

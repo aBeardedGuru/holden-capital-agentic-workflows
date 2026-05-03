@@ -1,0 +1,18 @@
+{
+  "deal_id": "deal-012",
+  "recorded_at": "2026-05-03T17:00:00Z",
+  "asset_name": "Maple Court 12-Unit",
+  "asset_type": "multifamily",
+  "market": "Cleveland, OH",
+  "purchase_price": 1650000,
+  "capital_required": 425000,
+  "base_case_return": 0.14,
+  "upside_case_return": 0.19,
+  "downside_case_return": 0.05,
+  "max_loss_estimate": 110000,
+  "key_risks": "Deferred maintenance; insurance reset; tenant delinquency",
+  "kill_criteria": "If major capex or collections are materially worse than underwritten",
+  "status": "watchlist",
+  "lesson": null,
+  "approved_for_retrieval": true
+}

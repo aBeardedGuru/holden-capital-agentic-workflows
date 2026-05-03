@@ -1,0 +1,474 @@
+{
+  "name": "Refactor Agent",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": {
+    "description": "Simple one-agent chat workflow for monorepo refactor analysis. Configure placeholder credentials before activation.",
+    "source_workflow_id": "BIIm0hKHWavBIY3z",
+    "requires": [
+      "OpenRouter credential in n8n",
+      "GitHub credential in n8n",
+      "automation/prompts/refactor-agent-monorepo.md",
+      "docs/refactor-agent-operating-contract.md"
+    ]
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "chat-trigger",
+      "name": "When chat message received",
+      "webhookId": "REPLACE_WITH_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $input.first().json || {};\nconst raw = [src.chatInput, src.text, src.message, src.prompt, src.input].find((v) => typeof v === 'string' && v.trim()) || JSON.stringify(src);\n\nreturn [{\n  json: {\n    ...src,\n    refactorRequest: raw.trim(),\n    chatInput: raw.trim()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        0
+      ],
+      "id": "prepare-request",
+      "name": "Prepare Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $input.first().json || {};\nconst raw = String(src.refactorRequest || src.chatInput || src.text || src.message || src.prompt || src.input || '').trim();\nconst urlMatch = raw.match(/https?:\\/\\/github\\.com\\/([^/\\s?#]+)\\/([^/\\s?#]+)(?:\\.git)?(?:[/?#]|$)/i);\nconst sanitized = raw.replace(/https?:\\/\\/\\S+/gi, ' ');\nconst shorthandMatch = sanitized.match(/(?:^|[\\s\"'`(])([A-Za-z0-9-]+)\\/([A-Za-z0-9_.-]+)(?=[\\s\"'`),.!?]|$)/);\nconst match = urlMatch || shorthandMatch;\nconst cleanSegment = (value) => String(value || '').replace(/[)\\],.!?;:'\"`]+$/g, '');\nconst repositoryOwner = match ? cleanSegment(match[1]) : '';\nconst repositoryName = match ? cleanSegment(match[2]).replace(/\\.git$/i, '') : '';\nconst repositoryTarget = repositoryOwner && repositoryName ? `${repositoryOwner}/${repositoryName}` : '';\nconst needsClarification = !repositoryTarget;\nconst clarificationMessage = 'Please provide a GitHub repository URL or owner/repo string, for example https://github.com/openai/openai or openai/openai.';\nconst requestedAction = /\\brefactor(?:\\s+the\\s+repo)?\\b/i.test(raw)\n  ? 'refactor'\n  : /\\b(review|inspect|audit|analy[sz]e)\\b/i.test(raw)\n    ? 'inspect'\n    : 'refactor';\n\nreturn [{\n  json: {\n    ...src,\n    repositoryOwner,\n    repositoryName,\n    repositoryTarget,\n    requestedAction,\n    needsClarification,\n    clarificationMessage,\n    refactorRequest: repositoryTarget ? `${raw}\\n\\nTarget repository: ${repositoryTarget}\\nRequested action: ${requestedAction}` : raw,\n    chatInput: raw\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        0
+      ],
+      "id": "validate-repository-target",
+      "name": "Validate Repository Target"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.needsClarification}}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        368,
+        0
+      ],
+      "id": "repository-target-gate",
+      "name": "Repository Target Gate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $input.first().json || {};\nreturn [{\n  json: {\n    text: src.clarificationMessage || 'Please provide a GitHub repository URL or owner/repo string before I can inspect it.',\n    needsClarification: true\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -160
+      ],
+      "id": "reply-with-clarification",
+      "name": "Reply With Clarification"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('Validate Repository Target').first().json || {};\nconst lookup = $input.first().json || {};\nconst lookupFailed = Boolean(lookup.error);\nconst repositoryLookup = lookupFailed\n  ? null\n  : {\n      fullName: lookup.full_name ?? lookup.fullName ?? src.repositoryTarget ?? '',\n      private: lookup.private ?? null,\n      archived: lookup.archived ?? null,\n      disabled: lookup.disabled ?? null,\n      defaultBranch: lookup.default_branch ?? lookup.defaultBranch ?? null,\n      description: lookup.description ?? null,\n      language: lookup.language ?? null,\n      htmlUrl: lookup.html_url ?? lookup.htmlUrl ?? null\n    };\n\nreturn [{\n  json: {\n    ...src,\n    repositoryLookup,\n    repositoryLookupError: lookupFailed ? lookup.error : null,\n    repositoryLookupStatus: lookupFailed ? 'failed' : 'ok'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        0
+      ],
+      "id": "prepare-agent-payload",
+      "name": "Prepare Agent Payload"
+    },
+    {
+      "parameters": {
+        "descriptionType": "auto",
+        "authentication": "accessToken",
+        "resource": "file",
+        "operation": "list",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $json.repositoryOwner }}"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $json.repositoryName }}"
+        },
+        "filePath": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Repository_Path', ``, 'string') }}",
+        "additionalParameters": {}
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        816,
+        -24
+      ],
+      "id": "list-repository-files",
+      "name": "List repository files in GitHub",
+      "webhookId": "REPLACE_WITH_LIST_FILES_WEBHOOK_ID",
+      "credentials": {
+        "githubApi": {
+          "id": "REPLACE_WITH_GITHUB_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_GITHUB_CREDENTIAL_NAME"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "descriptionType": "auto",
+        "authentication": "accessToken",
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $json.repositoryOwner }}"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $json.repositoryName }}"
+        },
+        "filePath": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('File_Path', ``, 'string') }}",
+        "asBinaryProperty": false,
+        "additionalParameters": {}
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        816,
+        128
+      ],
+      "id": "get-repository-file",
+      "name": "Get repository file in GitHub",
+      "webhookId": "REPLACE_WITH_GET_FILE_WEBHOOK_ID",
+      "credentials": {
+        "githubApi": {
+          "id": "REPLACE_WITH_GITHUB_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_GITHUB_CREDENTIAL_NAME"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.repositoryLookupStatus === 'failed'}}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        768,
+        0
+      ],
+      "id": "repository-availability-gate",
+      "name": "Repository Availability Gate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $input.first().json || {};\nreturn [{\n  json: {\n    text: `I could not access ${src.repositoryTarget || 'the requested repository'}. It may be private, unavailable, or the credential may not have access. Provide a reachable repository or the relevant files directly.`,\n    repositoryUnavailable: true\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        968,
+        -160
+      ],
+      "id": "reply-with-repository-unavailable",
+      "name": "Reply With Repository Unavailable"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{$json.refactorRequest}}",
+        "options": {
+          "systemMessage": "# Refactor Agent Prompt\n\nYou are a senior software engineer acting as a repository refactoring agent.\n\nYour job is to inspect the repository, identify refactoring opportunities, and improve maintainability, consistency, and structure while keeping behavior stable.\n\n## Mission\n\nRefactor the codebase in a way that:\n\n- improves readability\n- reduces duplication\n- clarifies module boundaries\n- tightens types and contracts\n- simplifies complex logic\n- preserves public behavior unless a safe migration plan is explicitly provided\n\n## Core Rules\n\n- Use the repository's existing conventions first.\n- Keep changes incremental and reviewable.\n- Prefer small, focused diffs over large rewrites.\n- Do not change public APIs, routes, or exported behavior unless clearly justified.\n- Add or update tests whenever the refactor is non-trivial.\n- Avoid speculative changes; only refactor what you can justify from the codebase.\n- If something is already clean, say so instead of forcing a change.\n\n## What To Look For\n\nInspect for:\n\n- long functions or classes\n- duplicate logic\n- confusing folder structure\n- weak boundaries between modules\n- dead code or unused exports\n- inconsistent naming\n- unsafe types or weak typing\n- repeated config access\n- error handling inconsistency\n- slow or brittle test patterns\n- obvious maintainability problems\n- architecture drift between packages or layers\n\n## Refactor Priorities\n\n1. Safe mechanical cleanup.\n2. Local modular improvements.\n3. Boundary and structure improvements.\n4. Higher-risk changes only if clearly warranted and migration-safe.\n\n## Workflow\n\n1. Scan the repo and identify key configs, scripts, and conventions.\n2. Map the repository structure.\n3. Find refactor candidates and rank them by value and risk.\n4. Propose a phased refactor plan.\n5. Apply only low-risk changes first unless told otherwise.\n6. Validate the changes with existing tests, lint, and type checks.\n7. Report anything that needs follow-up.\n\n## Monorepo Guidance\n\n- Stay aware of package boundaries and shared utilities.\n- Prefer package-local cleanup before shared cross-package changes.\n- Flag boundary drift explicitly when one package reaches through another package's internals.\n- If larger structural changes are warranted, propose them before making them.\n\n## Input Contract\n\n- Use the upstream validated `repositoryOwner`, `repositoryName`, and `repositoryTarget` fields.\n- Respect `requestedAction` when present: `refactor` should bias toward change-oriented output, `inspect` should stay diagnostic.\n- The workflow preflights repository availability before the agent runs.\n- If `repositoryLookupStatus` is present, use `repositoryLookup` for repository metadata instead of re-checking the repository.\n- If `needsClarification` is true, do not call any GitHub tools.\n- Do not invent repository coordinates or guess a repository from unrelated text.\n- If the repository preflight or a GitHub lookup fails, return a concise note instead of crashing the run.\n- Only inspect the target repository that was explicitly parsed from the user request.\n\n## Tool Use\n\n- Start by identifying the repo root, primary packages, and main build/test tooling.\n- Use available repository metadata and pull request context to infer conventions when useful.\n- Base recommendations on evidence from the repository, not generic best practices.\n- If the available tools are not enough to inspect file contents directly, say so clearly and limit claims to what can actually be verified.\n\n## Repository Reading Protocol\n\n- Use `repositoryLookup` to orient yourself before reading files.\n- Start with `List repository files in GitHub` to discover the top-level tree.\n- Read `README*`, root manifests, workspace configs, and root test or lint configs first.\n- Then inspect package manifests, entrypoints, and the most relevant source files.\n- Use `Get repository file in GitHub` to inspect file contents when a path is known.\n- Do not claim a repository-wide conclusion until you have actually read the relevant files.\n- If file access is insufficient, say exactly what you could not inspect.\n\n## Refactor Command Handling\n\n- If the user asks to `refactor` a repository, prioritize change-oriented findings, safe cleanup opportunities, and a phased refactor plan.\n- If the user asks to `inspect` or `review`, keep the output advisory and diagnostic.\n- If the request is ambiguous, default to the safe advisory path and ask for the minimum missing detail only when necessary.\n\n## Deliverables\n\nReturn results in this format:\n\n### Repository map\n\nShort tree or summary of the repo layout.\n\n### Conventions detected\n\nList the repo's existing patterns, tools, and rules.\n\n### Findings\n\nUse a table with:\n\n- severity\n- file(s)\n- issue\n- impact\n- recommended fix\n\n### Refactor plan\n\nBreak into:\n\n- Phase 1: safe cleanup\n- Phase 2: moderate structural improvements\n- Phase 3: higher-risk changes only if needed\n\n### Proposed changes\n\nShow the top high-value refactors first.\n\n### Test plan\n\nList what should be run or added after each change.\n\n### Risks and rollback\n\nExplain any compatibility or rollback concerns.\n\n## Constraints\n\n- Preserve behavior by default.\n- Do not invent patterns that conflict with the repo.\n- Respect existing lint, format, type, and test tooling.\n- Be concise.\n- Be opinionated but evidence-based.\n- Optimize for maintainability and safety.\n- Think like a refactoring lead, not a feature implementer."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "refactor-agent",
+      "name": "Refactor Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4.1-mini",
+        "options": {
+          "temperature": 0,
+          "maxTokens": 2200
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -176
+      ],
+      "id": "openrouter-model",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "REPLACE_WITH_OPENROUTER_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_OPENROUTER_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "repository",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "={{ 'https://github.com/' + $json.repositoryOwner }}",
+          "mode": "url",
+          "__regex": "https:\\/\\/(?:[^/]+)\\/([-_0-9a-zA-Z]+)"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "={{ 'https://github.com/' + $json.repositoryOwner + '/' + $json.repositoryName }}",
+          "mode": "url",
+          "__regex": "https:\\/\\/(?:[^/]+)\\/(?:[-_0-9a-zA-Z]+)\\/([-_.0-9a-zA-Z]+)"
+        }
+      },
+      "type": "n8n-nodes-base.githubTool",
+      "typeVersion": 1.1,
+      "position": [
+        144,
+        224
+      ],
+      "id": "get-repository",
+      "name": "Get a repository in GitHub",
+      "webhookId": "REPLACE_WITH_GITHUB_TOOL_WEBHOOK_ID_1",
+      "credentials": {
+        "githubApi": {
+          "id": "REPLACE_WITH_GITHUB_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_GITHUB_CREDENTIAL_NAME"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "resource": "repository",
+        "operation": "getPullRequests",
+        "owner": {
+          "__rl": true,
+          "value": "={{ 'https://github.com/' + $json.repositoryOwner }}",
+          "mode": "url",
+          "__regex": "https:\\/\\/(?:[^/]+)\\/([-_0-9a-zA-Z]+)"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "={{ 'https://github.com/' + $json.repositoryOwner + '/' + $json.repositoryName }}",
+          "mode": "url",
+          "__regex": "https:\\/\\/(?:[^/]+)\\/(?:[-_0-9a-zA-Z]+)\\/([-_.0-9a-zA-Z]+)"
+        },
+        "getRepositoryPullRequestsFilters": {}
+      },
+      "type": "n8n-nodes-base.githubTool",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        224
+      ],
+      "id": "get-pull-requests",
+      "name": "Get pull requests of a repository in GitHub",
+      "webhookId": "REPLACE_WITH_GITHUB_TOOL_WEBHOOK_ID_2",
+      "credentials": {
+        "githubApi": {
+          "id": "REPLACE_WITH_GITHUB_CREDENTIAL_ID",
+          "name": "REPLACE_WITH_GITHUB_CREDENTIAL_NAME"
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Prepare Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Request": {
+      "main": [
+        [
+          {
+            "node": "Validate Repository Target",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Repository Target": {
+      "main": [
+        [
+          {
+            "node": "Repository Target Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Repository Target Gate": {
+      "main": [
+        [
+          {
+            "node": "Reply With Clarification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a repository in GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a repository in GitHub": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Agent Payload": {
+      "main": [
+        [
+          {
+            "node": "Repository Availability Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Repository Availability Gate": {
+      "main": [
+        [
+          {
+            "node": "Reply With Repository Unavailable",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Refactor Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply With Clarification": {
+      "main": [
+        []
+      ]
+    },
+    "Reply With Repository Unavailable": {
+      "main": [
+        []
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Refactor Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get pull requests of a repository in GitHub": {
+      "ai_tool": [
+        [
+          {
+            "node": "Refactor Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List repository files in GitHub": {
+      "ai_tool": [
+        [
+          {
+            "node": "Refactor Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get repository file in GitHub": {
+      "ai_tool": [
+        [
+          {
+            "node": "Refactor Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "versionId": "REPLACE_WITH_VERSION_ID",
+  "triggerCount": 0,
+  "tags": []
+}

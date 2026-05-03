@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "finding_id": "dup-automation-script-001",
+  "job_id": "refactor-job-20260426-001",
+  "category": "duplication",
+  "title": "Duplicate timestamp helper in worker scripts",
+  "file_path": "automation/scripts/codex-finance-worker.sh",
+  "line_start": 45,
+  "line_end": 53,
+  "evidence": "Multiple identical UTC timestamp formats are redefined.",
+  "suggested_refactor": "Extract one timestamp helper and reuse it across script sections.",
+  "estimated_effort": "S",
+  "impact_score": 3,
+  "confidence": 0.94,
+  "risk_level": "low",
+  "requires_human_review": false
+}

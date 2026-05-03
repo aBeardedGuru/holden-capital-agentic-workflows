@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "run_id": "pr-review-2026-05-03T13-00-00Z",
+  "repo": "aBeardedGuru/holden-capital-mono",
+  "pr_number": 482,
+  "pr_title": "feat(ci): harden release workflow and cache dependencies",
+  "pr_url": "https://github.com/aBeardedGuru/holden-capital-mono/pull/482",
+  "pr_head_sha": "4e12f6a9ec0b4b7eb4fcd4dcfd5a635e4dc1d54a",
+  "pr_base_ref": "main",
+  "pr_head_ref": "agent/story-482-ci-hardening",
+  "labels": [
+    "ci",
+    "automation"
+  ],
+  "changed_files": [
+    ".github/workflows/release.yml",
+    "infra/docker/Dockerfile",
+    "packages/service-a/src/index.ts"
+  ],
+  "review_role": "ci_cd"
+}

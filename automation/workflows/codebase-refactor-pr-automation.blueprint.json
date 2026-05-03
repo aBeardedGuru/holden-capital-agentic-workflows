@@ -1,0 +1,606 @@
+{
+  "name": "Code Review - Periodic PR Automation",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "meta": {
+    "description": "Blueprint for scheduled pull-request review routing with specialized n8n AI reviewers and GitHub comment posting. Configure placeholders before activation.",
+    "requires": [
+      "GitHub CLI authenticated on n8n host",
+      "Execute Command node enabled (self-hosted n8n)",
+      "OpenRouter credential in n8n",
+      "automation/prompts/review-pr-ci-cd.md",
+      "automation/prompts/review-pr-security.md",
+      "automation/prompts/review-pr-tests.md",
+      "automation/prompts/review-pr-architecture.md",
+      "automation/prompts/review-pr-docs.md",
+      "automation/schemas/pr-review-result.schema.json"
+    ]
+  },
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "enabled",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "name": "githubRepo",
+              "type": "string",
+              "value": "REPLACE_WITH_OWNER_SLASH_REPO"
+            },
+            {
+              "name": "maxPrsPerRun",
+              "type": "number",
+              "value": 20
+            },
+            {
+              "name": "lookbackHours",
+              "type": "number",
+              "value": 24
+            },
+            {
+              "name": "includeDraftPrs",
+              "type": "boolean",
+              "value": false
+            },
+            {
+              "name": "routerRulesJson",
+              "type": "string",
+              "value": "{\n  \"ci_cd\": {\n    \"labels\": [\"ci\", \"cicd\", \"build\"],\n    \"paths\": [\"^\\\\.github/workflows/\", \"^infra/\", \"^docker/\", \"(^|/)Dockerfile$\"]\n  },\n  \"security\": {\n    \"labels\": [\"security\", \"auth\", \"secrets\"],\n    \"paths\": [\"(^|/)auth/\", \"(^|/)security/\", \"(^|/)middleware/\", \"(^|/)permissions?\"]\n  },\n  \"tests\": {\n    \"labels\": [\"test\", \"qa\"],\n    \"paths\": [\"(^|/)test[s]?/\", \"\\\\.spec\\\\.\", \"\\\\.test\\\\.\"]\n  },\n  \"architecture\": {\n    \"labels\": [\"architecture\", \"refactor\"],\n    \"paths\": [\"(^|/)src/\", \"(^|/)services/\", \"(^|/)packages/\", \"(^|/)modules/\"]\n  },\n  \"docs\": {\n    \"labels\": [\"docs\", \"documentation\"],\n    \"paths\": [\"(^|/)docs/\", \"\\\\.md$\", \"(^|/)README\"]\n  }\n}"
+            },
+            {
+              "name": "reviewerPromptTemplatesJson",
+              "type": "string",
+              "value": "{\n  \"ci_cd\": \"# PR Reviewer Prompt - CI/CD\\n\\nYou are a CI/CD review specialist for pull-request changes.\\n\\nInput is a JSON object matching `automation/schemas/pr-review-job.schema.json`.\\n\\nFocus:\\n- GitHub Actions and other pipeline files.\\n- build, release, caching, artifact, and deployment safety.\\n- deterministic builds and rollback readiness.\\n\\nReview rules:\\n- Prioritize breakage risk, flaky behavior, unsafe defaults, and secret leakage risk.\\n- Use changed file evidence only.\\n- Keep recommendations specific and patch-oriented.\\n\\nReturn only JSON matching `automation/schemas/pr-review-result.schema.json`.\\nSet `review_role` to `ci_cd`.\",\n  \"security\": \"# PR Reviewer Prompt - Security\\n\\nYou are a security review specialist for pull-request changes.\\n\\nInput is a JSON object matching `automation/schemas/pr-review-job.schema.json`.\\n\\nFocus:\\n- authentication and authorization changes.\\n- secrets handling, token scope, and credential exposure.\\n- input validation, injection vectors, and permission boundaries.\\n\\nReview rules:\\n- Prioritize exploitability and blast radius.\\n- Flag weak defaults and missing validation paths.\\n- Use changed file evidence only.\\n\\nReturn only JSON matching `automation/schemas/pr-review-result.schema.json`.\\nSet `review_role` to `security`.\",\n  \"tests\": \"# PR Reviewer Prompt - Tests\\n\\nYou are a test-quality review specialist for pull-request changes.\\n\\nInput is a JSON object matching `automation/schemas/pr-review-job.schema.json`.\\n\\nFocus:\\n- missing coverage for changed behavior.\\n- brittle tests, false positives, and regression risk.\\n- test isolation, determinism, and maintainability.\\n\\nReview rules:\\n- Call out uncovered behavior and edge cases first.\\n- Distinguish required tests from optional improvements.\\n- Use changed file evidence only.\\n\\nReturn only JSON matching `automation/schemas/pr-review-result.schema.json`.\\nSet `review_role` to `tests`.\",\n  \"architecture\": \"# PR Reviewer Prompt - Architecture\\n\\nYou are an architecture review specialist for pull-request changes.\\n\\nInput is a JSON object matching `automation/schemas/pr-review-job.schema.json`.\\n\\nFocus:\\n- module boundaries and coupling.\\n- contract drift and layering violations.\\n- long-term maintainability and operational clarity.\\n\\nReview rules:\\n- Highlight structural risks over style nits.\\n- Prefer concrete refactor guidance with low migration risk.\\n- Use changed file evidence only.\\n\\nReturn only JSON matching `automation/schemas/pr-review-result.schema.json`.\\nSet `review_role` to `architecture`.\",\n  \"docs\": \"# PR Reviewer Prompt - Docs\\n\\nYou are a documentation review specialist for pull-request changes.\\n\\nInput is a JSON object matching `automation/schemas/pr-review-job.schema.json`.\\n\\nFocus:\\n- missing or stale docs for behavior changes.\\n- runbook, onboarding, and operational clarity impacts.\\n- naming consistency and user/operator comprehension.\\n\\nReview rules:\\n- Prioritize docs required for safe operation.\\n- Call out unclear acceptance criteria and missing examples.\\n- Use changed file evidence only.\\n\\nReturn only JSON matching `automation/schemas/pr-review-result.schema.json`.\\nSet `review_role` to `docs`.\"\n}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $input.item.json;\n\nconst required = [\n  'githubRepo',\n  'maxPrsPerRun',\n  'lookbackHours',\n  'routerRulesJson',\n  'reviewerPromptTemplatesJson'\n];\n\nconst missing = required.filter((key) => {\n  const value = cfg[key];\n  return value == null || String(value).trim() === '' || String(value).startsWith('REPLACE_WITH_');\n});\n\nif (missing.length) {\n  throw new Error(`Config placeholders or missing values: ${missing.join(', ')}`);\n}\n\nif (!/^[^\\s/]+\\/[^\\s/]+$/.test(String(cfg.githubRepo))) {\n  throw new Error('githubRepo must use owner/repo format');\n}\n\nconst maxPrsPerRun = Number(cfg.maxPrsPerRun);\nif (!Number.isFinite(maxPrsPerRun) || maxPrsPerRun < 1 || maxPrsPerRun > 100) {\n  throw new Error('maxPrsPerRun must be between 1 and 100');\n}\n\nconst lookbackHours = Number(cfg.lookbackHours);\nif (!Number.isFinite(lookbackHours) || lookbackHours < 1 || lookbackHours > 720) {\n  throw new Error('lookbackHours must be between 1 and 720');\n}\n\nlet routerRules;\nlet reviewerPromptTemplates;\n\ntry {\n  routerRules = JSON.parse(cfg.routerRulesJson);\n} catch (error) {\n  throw new Error(`Invalid routerRulesJson: ${error.message}`);\n}\n\ntry {\n  reviewerPromptTemplates = JSON.parse(cfg.reviewerPromptTemplatesJson);\n} catch (error) {\n  throw new Error(`Invalid reviewerPromptTemplatesJson: ${error.message}`);\n}\n\nconst requiredRoles = ['ci_cd', 'security', 'tests', 'architecture', 'docs'];\nfor (const role of requiredRoles) {\n  if (!routerRules[role]) throw new Error(`Missing router rule for role: ${role}`);\n  if (!reviewerPromptTemplates[role]) throw new Error(`Missing prompt template for role: ${role}`);\n}\n\nreturn [{\n  json: {\n    ...cfg,\n    maxPrsPerRun,\n    lookbackHours,\n    routerRules,\n    reviewerPromptTemplates\n  }\n}];"
+      },
+      "id": "guard-config",
+      "name": "Guard Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.enabled}}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "id": "enabled-gate",
+      "name": "Enabled Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        704,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $input.item.json;\nconst state = $getWorkflowStaticData('global');\nconst now = new Date();\nconst fallbackSince = new Date(now.getTime() - (cfg.lookbackHours * 60 * 60 * 1000));\nconst previous = typeof state.lastSuccessfulRunAt === 'string' ? new Date(state.lastSuccessfulRunAt) : null;\nconst sinceDate = previous && Number.isFinite(previous.getTime()) ? previous : fallbackSince;\n\nreturn [{\n  json: {\n    ...cfg,\n    runId: `pr-review-${now.toISOString().replace(/[:.]/g, '-')}`,\n    runStartedAt: now.toISOString(),\n    since: sinceDate.toISOString(),\n    previousCursor: state.lastSuccessfulRunAt ?? null\n  }\n}];"
+      },
+      "id": "build-run-context",
+      "name": "Build Run Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $input.item.json;\nconst command = [\n  'gh pr list',\n  `--repo ${cfg.githubRepo}`,\n  '--state open',\n  `--limit ${cfg.maxPrsPerRun}`,\n  '--json number,title,url,updatedAt,isDraft,labels,headRefOid,baseRefName,headRefName'\n].join(' ');\n\nreturn [{ json: { ...cfg, command } }];"
+      },
+      "id": "build-pr-list-command",
+      "name": "Build PR List Command",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "command": "={{$json.command}}"
+      },
+      "id": "fetch-open-prs",
+      "name": "Fetch Open PRs",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Build PR List Command').first().json;\nconst raw = $input.item.json.stdout ?? '[]';\nlet rows;\n\ntry {\n  rows = JSON.parse(raw);\n} catch (error) {\n  throw new Error(`Unable to parse gh pr list JSON: ${error.message}`);\n}\n\nif (!Array.isArray(rows)) rows = [];\n\nconst sinceMs = Date.parse(cfg.since);\nconst filtered = rows.filter((pr) => {\n  const updatedMs = Date.parse(pr.updatedAt || 0);\n  if (!Number.isFinite(updatedMs)) return false;\n  if (!cfg.includeDraftPrs && pr.isDraft) return false;\n  return updatedMs >= sinceMs;\n});\n\nreturn filtered.map((pr) => ({\n  json: {\n    ...cfg,\n    prNumber: pr.number,\n    prTitle: pr.title,\n    prUrl: pr.url,\n    prUpdatedAt: pr.updatedAt,\n    prHeadSha: pr.headRefOid ?? null,\n    prBaseRef: pr.baseRefName ?? null,\n    prHeadRef: pr.headRefName ?? null,\n    prLabels: Array.isArray(pr.labels) ? pr.labels.map((l) => l.name).filter(Boolean) : []\n  }\n}));"
+      },
+      "id": "parse-pr-list",
+      "name": "Parse PR List",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nconst command = [\n  'gh pr view',\n  String(item.prNumber),\n  `--repo ${item.githubRepo}`,\n  '--json number,title,url,updatedAt,isDraft,labels,headRefOid,baseRefName,headRefName,files'\n].join(' ');\n\nreturn [{ json: { ...item, command } }];"
+      },
+      "id": "build-pr-detail-command",
+      "name": "Build PR Detail Command",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1904,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "command": "={{$json.command}}"
+      },
+      "id": "fetch-pr-details",
+      "name": "Fetch PR Details",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        2144,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Build PR Detail Command').item.json;\nconst raw = $input.item.json.stdout ?? '{}';\nlet pr;\n\ntry {\n  pr = JSON.parse(raw);\n} catch (error) {\n  throw new Error(`Unable to parse gh pr view JSON for PR ${cfg.prNumber}: ${error.message}`);\n}\n\nconst labels = Array.isArray(pr.labels) ? pr.labels.map((l) => String(l.name || '').toLowerCase()).filter(Boolean) : [];\nconst files = Array.isArray(pr.files) ? pr.files.map((f) => String(f.path || '')).filter(Boolean) : [];\n\nconst hasPathMatch = (patterns) => {\n  const arr = Array.isArray(patterns) ? patterns : [];\n  return arr.some((pattern) => {\n    try {\n      const re = new RegExp(pattern);\n      return files.some((file) => re.test(file));\n    } catch (error) {\n      return false;\n    }\n  });\n};\n\nconst hasLabelMatch = (targets) => {\n  const arr = Array.isArray(targets) ? targets : [];\n  return arr.some((name) => labels.includes(String(name).toLowerCase()));\n};\n\nconst roleOrder = ['ci_cd', 'security', 'tests', 'architecture', 'docs'];\nconst assignedRoles = [];\n\nfor (const role of roleOrder) {\n  const rule = cfg.routerRules?.[role] ?? {};\n  const match = hasPathMatch(rule.paths) || hasLabelMatch(rule.labels);\n  if (match) assignedRoles.push(role);\n}\n\nif (!assignedRoles.length) {\n  assignedRoles.push('architecture');\n}\n\nreturn [{\n  json: {\n    ...cfg,\n    prNumber: pr.number ?? cfg.prNumber,\n    prTitle: pr.title ?? cfg.prTitle,\n    prUrl: pr.url ?? cfg.prUrl,\n    prUpdatedAt: pr.updatedAt ?? cfg.prUpdatedAt,\n    prHeadSha: pr.headRefOid ?? cfg.prHeadSha,\n    prBaseRef: pr.baseRefName ?? cfg.prBaseRef,\n    prHeadRef: pr.headRefName ?? cfg.prHeadRef,\n    prLabels: labels,\n    changedFiles: files,\n    assignedRoles\n  }\n}];"
+      },
+      "id": "route-reviewers",
+      "name": "Route Reviewers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2384,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nconst out = [];\n\nfor (const role of item.assignedRoles || []) {\n  const promptTemplate = item.reviewerPromptTemplates?.[role];\n  if (!promptTemplate) continue;\n\n  out.push({\n    json: {\n      ...item,\n      reviewRole: role,\n      promptTemplate\n    }\n  });\n}\n\nreturn out;"
+      },
+      "id": "expand-review-jobs",
+      "name": "Expand Review Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2624,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\n\nconst changedFiles = Array.isArray(item.changedFiles) ? item.changedFiles : [];\nconst labels = Array.isArray(item.prLabels) ? item.prLabels : [];\n\nconst reviewInput = {\n  schema_version: '1.0',\n  run_id: item.runId,\n  repo: item.githubRepo,\n  pr_number: item.prNumber,\n  pr_title: item.prTitle,\n  pr_url: item.prUrl,\n  pr_head_sha: item.prHeadSha,\n  pr_base_ref: item.prBaseRef,\n  pr_head_ref: item.prHeadRef,\n  labels,\n  changed_files: changedFiles,\n  review_role: item.reviewRole\n};\n\nconst outputSchema = {\n  schema_version: '1.0',\n  run_id: 'string',\n  repo: 'owner/repo',\n  pr_number: 123,\n  pr_url: 'https://github.com/owner/repo/pull/123',\n  pr_head_sha: 'string|null',\n  review_role: 'ci_cd|security|tests|architecture|docs',\n  verdict: 'approve|comment|request_changes|informational',\n  overall_severity: 'low|medium|high|critical',\n  summary: 'string',\n  findings: [\n    {\n      id: 'string',\n      title: 'string',\n      severity: 'low|medium|high|critical',\n      category: 'string',\n      file_path: 'string|null',\n      line: 1,\n      rationale: 'string',\n      recommendation: 'string'\n    }\n  ],\n  checks_ran: ['string'],\n  requires_follow_up: true,\n  comment_markdown: 'string'\n};\n\nconst prompt = [\n  `Role: ${item.reviewRole}`,\n  '',\n  'Role prompt:',\n  item.promptTemplate,\n  '',\n  'PR review job payload (JSON):',\n  JSON.stringify(reviewInput, null, 2),\n  '',\n  'Return ONLY valid JSON matching this shape:',\n  JSON.stringify(outputSchema, null, 2),\n  '',\n  'Rules:',\n  '- Use changed_files and labels to prioritize findings.',\n  '- Be concise and evidence-based.',\n  '- If no issue is found, return empty findings array and verdict=informational.',\n  '- Do not output markdown wrappers.'\n].join('\\n');\n\nreturn [{\n  json: {\n    ...item,\n    reviewInput,\n    reviewPrompt: prompt\n  }\n}];"
+      },
+      "id": "build-review-prompt",
+      "name": "Build Review Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2864,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{$json.reviewPrompt}}",
+        "options": {
+          "systemMessage": "You are a senior pull-request reviewer. Return JSON only. Do not use markdown. Base findings only on provided PR metadata."
+        }
+      },
+      "id": "ai-pr-reviewer",
+      "name": "AI PR Reviewer",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3104,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxTokens": 1600,
+          "temperature": 0
+        }
+      },
+      "id": "openrouter-review-model",
+      "name": "GPT 4.1 mini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        3104,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('Build Review Prompt').item.json;\nconst raw = $input.item.json.output ?? $input.item.json.response ?? $input.item.json.text ?? $input.item.json.result ?? '{}';\nlet parsed;\n\ntry {\n  parsed = typeof raw === 'string' ? JSON.parse(raw.trim()) : raw;\n} catch (error) {\n  parsed = {\n    schema_version: '1.0',\n    run_id: src.runId,\n    repo: src.githubRepo,\n    pr_number: src.prNumber,\n    pr_url: src.prUrl,\n    pr_head_sha: src.prHeadSha,\n    review_role: src.reviewRole,\n    verdict: 'comment',\n    overall_severity: 'medium',\n    summary: `Reviewer output parse failure: ${error.message}`,\n    findings: [\n      {\n        id: `${src.reviewRole}-parse-failure`,\n        title: 'Reviewer output was not valid JSON',\n        severity: 'medium',\n        category: 'automation',\n        file_path: null,\n        line: null,\n        rationale: String(raw).slice(0, 500),\n        recommendation: 'Inspect agent output and re-run this PR review role.'\n      }\n    ],\n    checks_ran: [],\n    requires_follow_up: true,\n    comment_markdown: null\n  };\n}\n\nreturn [{\n  json: {\n    ...src,\n    reviewResult: parsed\n  }\n}];"
+      },
+      "id": "parse-reviewer-output",
+      "name": "Parse Reviewer Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3344,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nif (!items.length) return [];\n\nconst grouped = new Map();\n\nfor (const item of items) {\n  const row = item.json;\n  const key = String(row.prNumber);\n  if (!grouped.has(key)) {\n    grouped.set(key, {\n      runId: row.runId,\n      repo: row.githubRepo,\n      prNumber: row.prNumber,\n      prTitle: row.prTitle,\n      prUrl: row.prUrl,\n      prUpdatedAt: row.prUpdatedAt,\n      prHeadSha: row.prHeadSha,\n      roles: []\n    });\n  }\n\n  grouped.get(key).roles.push({\n    role: row.reviewRole,\n    result: row.reviewResult\n  });\n}\n\nconst outputs = [];\n\nfor (const group of grouped.values()) {\n  const lines = [];\n  lines.push(`Automated periodic review for #${group.prNumber} (${group.prTitle})`);\n  lines.push('');\n  lines.push(`PR: ${group.prUrl}`);\n  lines.push(`Head SHA: ${group.prHeadSha ?? 'unknown'}`);\n  lines.push('');\n  lines.push('Reviewer summaries:');\n\n  for (const roleData of group.roles) {\n    const summary = roleData.result?.summary ?? 'No summary provided';\n    const severity = roleData.result?.overall_severity ?? 'unknown';\n    const verdict = roleData.result?.verdict ?? 'comment';\n    const findings = Array.isArray(roleData.result?.findings) ? roleData.result.findings.length : 0;\n    lines.push(`- ${roleData.role}: verdict=${verdict}, severity=${severity}, findings=${findings}`);\n    lines.push(`  ${summary}`);\n  }\n\n  outputs.push({\n    json: {\n      runId: group.runId,\n      repo: group.repo,\n      prNumber: group.prNumber,\n      prUpdatedAt: group.prUpdatedAt,\n      commentBody: lines.join('\\n'),\n      roleResults: group.roles\n    }\n  });\n}\n\nreturn outputs;"
+      },
+      "id": "aggregate-pr-reviews",
+      "name": "Aggregate PR Reviews",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3584,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = $input.item.json;\nconst shellQuote = (value) => `'${String(value).replace(/'/g, `'\\''`)}'`;\nconst command = [\n  'gh pr comment',\n  String(row.prNumber),\n  `--repo ${row.repo}`,\n  '--body', shellQuote(row.commentBody)\n].join(' ');\n\nreturn [{ json: { ...row, command } }];"
+      },
+      "id": "build-post-comment-command",
+      "name": "Build Post Comment Command",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3824,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "command": "={{$json.command}}"
+      },
+      "id": "post-github-comment",
+      "name": "Post GitHub Comment",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        4064,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const outputs = $input.all().map((i) => i.json || {});\nif (!outputs.length) return [];\n\nlet latest = null;\nfor (const row of outputs) {\n  const value = row.prUpdatedAt ? Date.parse(row.prUpdatedAt) : NaN;\n  if (!Number.isFinite(value)) continue;\n  if (latest == null || value > latest) latest = value;\n}\n\nif (latest != null) {\n  const state = $getWorkflowStaticData('global');\n  state.lastSuccessfulRunAt = new Date(latest).toISOString();\n}\n\nreturn [{\n  json: {\n    processedPrCount: outputs.length,\n    updatedCursorAt: latest == null ? null : new Date(latest).toISOString()\n  }\n}];"
+      },
+      "id": "persist-run-cursor",
+      "name": "Persist Run Cursor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4304,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Flow summary:\n1) Trigger on schedule (daily default) or manual run.\n2) Pull open PR list with gh and filter by updatedAt >= last successful run cursor (or lookback window fallback).\n3) Pull file-level PR detail for each candidate PR.\n4) Route each PR into one or more review roles using path/label rules.\n5) Build role-specific prompt payload and run n8n AI reviewer directly.\n6) Parse/normalize role outputs into structured findings.\n7) Aggregate role outputs into one concise PR comment.\n8) Post comment back to the PR with gh.\n9) Persist latest processed updatedAt as workflow cursor."
+      },
+      "id": "implementation-notes",
+      "name": "Implementation Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Safety notes:\n- Keep this workflow inactive until placeholders are replaced.\n- Use a least-privilege GitHub token for `gh` auth.\n- Execute Command is self-hosted only; this blueprint is not n8n-cloud compatible.\n- AI reviewer must return strict JSON compatible with automation/schemas/pr-review-result.schema.json.\n- No auto-merge actions are included."
+      },
+      "id": "safety-notes",
+      "name": "Safety Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3824,
+        -272
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Guard Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard Config": {
+      "main": [
+        [
+          {
+            "node": "Enabled Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enabled Gate": {
+      "main": [
+        [
+          {
+            "node": "Build Run Context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Build Run Context": {
+      "main": [
+        [
+          {
+            "node": "Build PR List Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build PR List Command": {
+      "main": [
+        [
+          {
+            "node": "Fetch Open PRs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Open PRs": {
+      "main": [
+        [
+          {
+            "node": "Parse PR List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse PR List": {
+      "main": [
+        [
+          {
+            "node": "Build PR Detail Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build PR Detail Command": {
+      "main": [
+        [
+          {
+            "node": "Fetch PR Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch PR Details": {
+      "main": [
+        [
+          {
+            "node": "Route Reviewers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Reviewers": {
+      "main": [
+        [
+          {
+            "node": "Expand Review Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expand Review Jobs": {
+      "main": [
+        [
+          {
+            "node": "Build Review Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Reviewer Output": {
+      "main": [
+        [
+          {
+            "node": "Aggregate PR Reviews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate PR Reviews": {
+      "main": [
+        [
+          {
+            "node": "Build Post Comment Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Post Comment Command": {
+      "main": [
+        [
+          {
+            "node": "Post GitHub Comment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post GitHub Comment": {
+      "main": [
+        [
+          {
+            "node": "Persist Run Cursor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Review Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI PR Reviewer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI PR Reviewer": {
+      "main": [
+        [
+          {
+            "node": "Parse Reviewer Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT 4.1 mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI PR Reviewer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

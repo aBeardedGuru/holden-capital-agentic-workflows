@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "run_id": "pr-review-2026-05-03T13-00-00Z",
+  "repo": "aBeardedGuru/holden-capital-mono",
+  "pr_number": 482,
+  "pr_url": "https://github.com/aBeardedGuru/holden-capital-mono/pull/482",
+  "pr_head_sha": "4e12f6a9ec0b4b7eb4fcd4dcfd5a635e4dc1d54a",
+  "review_role": "ci_cd",
+  "verdict": "request_changes",
+  "overall_severity": "high",
+  "summary": "Workflow cache key does not include lockfile hash, so stale dependencies can leak between runs.",
+  "findings": [
+    {
+      "id": "ci-cache-key-001",
+      "title": "Cache key omits lockfile digest",
+      "severity": "high",
+      "category": "ci_cache",
+      "file_path": ".github/workflows/release.yml",
+      "line": 44,
+      "rationale": "Cache restore key only uses branch and OS, which may restore incompatible dependencies.",
+      "recommendation": "Include the lockfile hash in the primary cache key and keep broad restore keys as fallback only."
+    }
+  ],
+  "checks_ran": [
+    "workflow-logic-review"
+  ],
+  "requires_follow_up": true,
+  "comment_markdown": "### CI/CD Review\n- High-risk issue found in cache key strategy.\n- Please update cache key composition before merge."
+}

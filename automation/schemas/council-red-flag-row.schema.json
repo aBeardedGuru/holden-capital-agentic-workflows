@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://holdencapital.io/schemas/council-red-flag-row.schema.json",
+  "title": "Council Red Flag Row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "flag_id",
+    "role",
+    "title",
+    "description",
+    "decision_type",
+    "severity",
+    "trigger_condition",
+    "recommended_response",
+    "example_reference",
+    "approved_for_retrieval"
+  ],
+  "properties": {
+    "flag_id": {"type": "string", "minLength": 1},
+    "role": {"type": "string", "enum": ["discipline", "wealth", "strategy", "wisdom", "shared"]},
+    "title": {"type": "string", "minLength": 1},
+    "description": {"type": "string", "minLength": 1},
+    "decision_type": {"type": "string", "minLength": 1},
+    "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+    "trigger_condition": {"type": "string", "minLength": 1},
+    "recommended_response": {"type": "string", "minLength": 1},
+    "example_reference": {"type": ["string", "null"]},
+    "approved_for_retrieval": {"type": "boolean"}
+  }
+}

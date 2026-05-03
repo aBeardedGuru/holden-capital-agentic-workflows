@@ -17,6 +17,17 @@ Google Drive Holden Capital/Finance Automation/00_INBOX
   -> n8n moves the Drive file to processed, review, or error
 ```
 
+Operator dashboard control plane variant:
+
+```text
+Streamlit dashboard
+  -> uploads files to Google Drive 00_INBOX
+  -> triggers n8n run-now/retry via API webhook with file IDs
+  -> monitors execution status from n8n executions API
+  -> supports hard-stop for running executions
+  -> writes operator audit events to sheet + local runtime JSONL
+```
+
 Current live variant for simple personal-drive triage:
 
 ```text
@@ -37,6 +48,13 @@ Workflow artifact for this variant:
 - [automation/workflows/google-drive-download-for-processing.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/google-drive-download-for-processing.json)
 - [automation/workflows/finance-automation-staging-pipeline.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/finance-automation-staging-pipeline.json)
 - [automation/workflows/finance-invoices.blueprint.json](/home/dank/Projects/holden-capital-agentic-workflows/automation/workflows/finance-invoices.blueprint.json)
+- [automation/dashboard/app.py](/home/dank/Projects/holden-capital-agentic-workflows/automation/dashboard/app.py)
+
+Dashboard execution control contract:
+
+- Start payload includes `file_ids`, `operator_id`, `requested_at`, `reason`, optional `force_retry`, optional `dry_run`, and `idempotency_key`.
+- Stop action targets an active n8n execution id through execution API termination.
+- Audit event shape is `event_id,event_type,operator_id,file_ids,execution_id,status,reason,timestamp,metadata`.
 
 For item-by-item terminal routing in n8n, avoid `$item(0)` references in move expressions. Use linked item access so each file routes with its own `fileId` and `targetFolderId`.
 

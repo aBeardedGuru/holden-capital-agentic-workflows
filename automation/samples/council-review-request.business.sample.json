@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "request_id": "council-2026-05-03-business-001",
+  "decision_type": "business_decision",
+  "question": "Should I hire a full-time operator now or keep using contractors for another quarter?",
+  "context": "The business is growing, but current operations are still founder-heavy. Contractors are flexible, but coordination cost is rising and ownership of recurring work is weak.",
+  "options_considered": [
+    "Hire a full-time operator now",
+    "Keep contractors for one more quarter",
+    "Hire part-time operations support first"
+  ],
+  "preferred_option": "Hire a full-time operator now",
+  "time_horizon": "12 months",
+  "capital_at_risk": 120000,
+  "resource_commitment": "Management time for hiring, onboarding, and process cleanup",
+  "upside_case": "A strong operator creates leverage, tighter execution, and founder focus.",
+  "base_case": "Execution improves moderately, but onboarding takes longer than expected.",
+  "downside_case": "The hire is a poor fit, consumes management attention, and adds fixed cost before the systems are ready.",
+  "known_risks": [
+    "Role scope is still fuzzy",
+    "Current documentation is incomplete",
+    "A rushed hire could create a people problem"
+  ],
+  "unknowns": [
+    "Whether the right candidate can be found quickly",
+    "Which tasks should remain founder-owned",
+    "What success metrics the role should own in month one"
+  ],
+  "constraints": [
+    "Need to keep cash discipline",
+    "Do not want to add complexity that slows current deal flow"
+  ],
+  "values_or_principles": [
+    "Prefer clarity before scale",
+    "Avoid building fixed cost on hope alone"
+  ],
+  "requested_at": "2026-05-03T17:05:00Z"
+}

@@ -1,0 +1,12 @@
+{
+  "flag_id": "rf-007",
+  "role": "wealth",
+  "title": "Narrative-rich but downside-poor deal",
+  "description": "The operator can describe upside in detail but cannot bound downside credibly.",
+  "decision_type": "deal_review",
+  "severity": "high",
+  "trigger_condition": "Downside case is vague, missing, or obviously optimistic",
+  "recommended_response": "Pause or renegotiate until the downside can be bounded",
+  "example_reference": "deal-012",
+  "approved_for_retrieval": true
+}

@@ -1,16 +1,16 @@
-# Epic 4: Weekly Financial Snapshot
+# Epic 4: Periodic Financial Summarization
 
-Enable the operator to produce a weekly financial snapshot that summarizes income, expenses, invoice status, property breakdowns, and review actions.
+Enable the operator to produce periodic (weekly and monthly) financial summaries that cover income, expenses, invoice status, property breakdowns, and review actions.
 
-## Story 4.1: Define Weekly Snapshot Input Contract
+## Story 4.1: Define Periodic Summary Input Contract
 
 As a Holden Capital operator,
-I want a normalized weekly report input contract,
+I want a normalized periodic report input contract,
 So that financial summaries can be generated from reviewed ledger data.
 
 **Acceptance Criteria:**
 
-**Given** a weekly snapshot run is requested
+**Given** a periodic summary run is requested
 **When** input validation runs
 **Then** it requires reporting period start, reporting period end, income total, expense total, open invoice count, overdue invoice count, and exception count.
 
@@ -20,7 +20,7 @@ So that financial summaries can be generated from reviewed ledger data.
 
 **Given** required report inputs are missing
 **When** validation runs
-**Then** the snapshot is not generated
+**Then** the summary is not generated
 **And** the missing inputs are logged.
 
 ## Story 4.2: Generate Weekly Financial Summary Draft
@@ -31,8 +31,8 @@ So that I can review business performance without manually assembling the basics
 
 **Acceptance Criteria:**
 
-**Given** valid weekly snapshot inputs exist
-**When** the snapshot flow runs
+**Given** valid weekly summary inputs exist
+**When** the summary flow runs
 **Then** it generates a summary with income, expenses, net, open invoices, overdue invoices, and exception count.
 
 **Given** expense and invoice data includes review statuses
@@ -85,15 +85,15 @@ So that I spend review time on what actually needs attention.
 **When** the snapshot is generated
 **Then** it lists the variance item, category or property, threshold crossed, and suggested review action.
 
-## Story 4.5: Log Weekly Snapshot Sources And Generation Metadata
+## Story 4.5: Log Periodic Summary Sources And Generation Metadata
 
 As a bookkeeper or operator,
-I want every weekly snapshot to be traceable,
+I want every periodic summary to be traceable,
 So that report numbers can be explained later.
 
 **Acceptance Criteria:**
 
-**Given** a weekly snapshot is generated
+**Given** a periodic summary is generated
 **When** it is stored or sent
 **Then** the run log records flow name, reporting period, source window, generation timestamp, input source references, and output location.
 
@@ -102,6 +102,27 @@ So that report numbers can be explained later.
 **Then** the run log preserves the prior run and records the new run separately.
 
 **Given** source validation errors occur
-**When** the snapshot run completes
+**When** the summary run completes
 **Then** validation errors are captured in the `Run Log`
-**And** the snapshot status reflects draft, blocked, or review required.
+**And** the summary status reflects draft, blocked, or review required.
+
+## Story 4.6: Generate Monthly Financial Summary Draft
+
+As a Holden Capital operator,
+I want a month-end summary draft,
+So that bookkeeping and reconciliation work can start from a complete monthly view.
+
+**Acceptance Criteria:**
+
+**Given** valid monthly summary inputs exist
+**When** the month-end summary flow runs
+**Then** it generates monthly totals for income, expenses, net, open invoices, overdue invoices, and exception count.
+
+**Given** monthly data includes prior-period comparables
+**When** the month-end summary is generated
+**Then** it includes period-over-period deltas for key totals
+**And** flags material changes for review.
+
+**Given** the month-end report is generated
+**When** dry-run output is saved
+**Then** it is clearly marked as draft and not final accounting output.
