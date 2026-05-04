@@ -422,7 +422,11 @@
     },
     {
       "parameters": {
-        "options": {}
+        "model": "openai/gpt-4.1-mini",
+        "options": {
+          "maxTokens": 1200,
+          "temperature": 0
+        }
       },
       "id": "ai_model_1",
       "name": "Claude Classifier",

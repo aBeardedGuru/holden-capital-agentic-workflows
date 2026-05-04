@@ -95,6 +95,7 @@ Holden Capital/
 The OpenRouter classifier step runs in n8n and must:
 
 - accept bounded file content and metadata from upstream nodes
+- set an explicit `maxTokens` cap on the model node; this workflow uses `1200` to stay well below provider defaults and avoid credit exhaustion
 - enforce strict JSON schema-compatible output formatting
 - write JSON output that matches the extraction schema
 - on failure, emit a machine-readable failure reason and route the file to `99_ERROR`
